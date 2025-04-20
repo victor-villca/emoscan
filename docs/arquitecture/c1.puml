@@ -1,0 +1,15 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+LAYOUT_WITH_LEGEND()
+
+Person(psychologist, "Psicólogo", "Un usuario que tiene sesiones con sus pacientes")
+
+System(emocan, "EmoScan", "Aplicacion web que detecta emociones faciales en la comunicacion digital y genera reportes.")
+System_Ext(meet, "Plataforma de Videoconferencias", "Plataforma que permite a los usuarios realizar videollamadas y reuniones online")
+
+
+' Relaciones
+psychologist ..> emocan : Analiza emociones de sus pacientes.
+emocan ..> meet : Captura informacion de video atraves de la pantalla compartida.
+@enduml

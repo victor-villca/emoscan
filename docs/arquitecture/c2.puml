@@ -1,0 +1,31 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_WITH_LEGEND()
+
+' Personas
+Person(psychologist, "Psicólogo", "Usuario que visualiza emociones y genera reportes.")
+
+System_Boundary(emocan, "EmoScan") {
+
+  Container(web_app, "Aplicación Web", "Container: React", "Interfaz gráfica usada por el psicólogo para visualizar emociones y descargar reportes.")
+  Container(emotion_detection_service, "Servicio de Reconocimiento de Emociones Faciales", "Container: Python", "Detecta emociones faciales a partir de imágenes.")
+  Container(face_detection_service, "Servicio de Reconocimiento Facial", "Container: Python", "Detecta y localiza rostros visibles a partir de imágenes.")
+  Container(api, "Backend API", "Container: Node.js", "Gestiona lógica del negocio, sesiones, usuarios, reportes, y conexión con la IA.")
+  Container(report_generator, "Generador de Reportes", "Container: Node.js", "Genera reportes con análisis emocional por sesión.")
+  ContainerDb(db, "Base de Datos", "Container: MongoDB", "Almacena datos de sesiones, rostros, emociones, usuarios y reportes.")
+}
+
+System_Ext(meet, "Plataforma de Videoconferencias", "Provee la pantalla compartida para análisis.")
+
+' Relaciones
+psychologist ...> web_app : Usa vía navegador
+
+web_app ..> api : "Hace llamadas a la API\n [JSON/HTTPS]"
+web_app ...> meet : Captura la pantalla compartida
+
+api ...> db : Lee y escribe datos
+api ..> emotion_detection_service : Envía rostros para analizar emociones \n [JSON/HTTPS]
+api ...> face_detection_service : Envía imagenes para detectar rostros\n [JSON/HTTPS]
+api ..> report_generator : Solicita generación de reporte\n [JSON/HTTPS]
+@enduml
