@@ -6,6 +6,7 @@ import DashboardHeader from '@/components/home/HomeHeader';
 import SessionCards from '@/components/home/SessionCards';
 import { SessionData } from '../types/sessionTypes';
 import { useSession } from 'next-auth/react';
+import Link from 'next/link';
 
 const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -35,6 +36,10 @@ const Dashboard = () => {
     fetchSessions();
   }, [session?.user?.userId]);
 
+  const handleViewDetails = () => {
+    router.push(`/session/${session?.user?.id}`);
+  };
+
   const filteredSessions = searchQuery
   ? sessions.filter(session =>
       (session.name?.toLowerCase() || '').includes(searchQuery.toLowerCase()))
@@ -63,47 +68,49 @@ const Dashboard = () => {
 
   // ✅ Main dashboard
   return (
-    <div className="min-h-screen bg-[#F8F9FA]">
-      <main className="container mx-auto px-4 py-6">
-        <DashboardHeader name={session.user.name} />
+    <>
+      <div className="min-h-screen bg-[#F8F9FA]">
+        <main className="container mx-auto px-4 py-6">
+          <DashboardHeader name={session.user.name} />
 
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-gray-800">Recent Sessions</h2>
-            <div className="relative">
-              <div className="flex items-center bg-white rounded-lg shadow-sm px-3 py-2">
-                <div className="w-5 h-5 flex items-center justify-center text-gray-400">
-                  <i className="ri-search-line"></i>
+          <div className="mb-8">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-gray-800">Recent Sessions</h2>
+              <div className="relative">
+                <div className="flex items-center bg-white rounded-lg shadow-sm px-3 py-2">
+                  <div className="w-5 h-5 flex items-center justify-center text-gray-400">
+                    <i className="ri-search-line"></i>
+                  </div>
+                  <input 
+                    type="text" 
+                    placeholder="Search sessions" 
+                    className="ml-2 text-sm border-none bg-transparent w-40 md:w-60"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
                 </div>
-                <input 
-                  type="text" 
-                  placeholder="Search sessions" 
-                  className="ml-2 text-sm border-none bg-transparent w-40 md:w-60"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
               </div>
             </div>
-          </div>
 
-          {isLoading ? (
-            <div className="text-center py-10">
-              <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading sessions...</p>
-            </div>
-          ) : sessions.length === 0 ? (
-            <div className="text-center py-10">
-              <div className="w-10 h-10 flex items-center justify-center text-gray-400 mx-auto mb-2">
-                <i className="ri-file-list-3-line ri-2x"></i>
+            {isLoading ? (
+              <div className="text-center py-10">
+                <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p className="text-gray-600">Loading sessions...</p>
               </div>
-              <p className="text-gray-600">No sessions found</p>
-            </div>
-          ) : (
-            <SessionCards sessions={filteredSessions} />
-          )}
-        </div>
-      </main>
-    </div>
+            ) : sessions.length === 0 ? (
+              <div className="text-center py-10">
+                <div className="w-10 h-10 flex items-center justify-center text-gray-400 mx-auto mb-2">
+                  <i className="ri-file-list-3-line ri-2x"></i>
+                </div>
+                <p className="text-gray-600">No sessions found</p>
+              </div>
+            ) : (
+              <SessionCards sessions={filteredSessions} />
+            )}
+          </div>
+        </main>
+      </div>
+    </>
   );
 };
 
