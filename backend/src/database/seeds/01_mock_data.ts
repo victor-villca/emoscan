@@ -32,7 +32,7 @@ export async function seed(knex: Knex): Promise<void> {
   
   const [session] = await knex('sessions')
     .insert({
-      user_id: 5,
+      user_id: 1,
       name: 'Demo Session',
       date: new Date(),
       start_time: '10:00:00',
