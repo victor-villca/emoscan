@@ -6,10 +6,8 @@ import { SessionDetails } from '@/types/sessionTypes';
 import EmotionCard from '@/components/session/EmotionCard';
 import { use } from "react";
 
-
-
-const SessionDetailsPage = ({ params }: { params: Promise<{ id: string }> }) => {
-  const { id } = use(params);
+const SessionDetailsPage = ({ params }: { params: Promise<{ sessionId: string }> }) => {
+  const { sessionId } = use(params);
 
   const [sessionData, setSessionData] = useState<SessionDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -17,11 +15,11 @@ const SessionDetailsPage = ({ params }: { params: Promise<{ id: string }> }) => 
 
   useEffect(() => {
     const fetchSessionDetails = async () => {
-      if (!id) return;
+      if (!sessionId) return;
       
       try {
         setIsLoading(true);
-        const response = await fetch(`http://localhost:4000/api/sessions/${id}`);
+        const response = await fetch(`http://localhost:4000/api/sessions/${sessionId}`);
         
         if (!response.ok) {
           throw new Error(`Failed to fetch session details. Status: ${response.status}`);
@@ -39,7 +37,7 @@ const SessionDetailsPage = ({ params }: { params: Promise<{ id: string }> }) => 
     };
 
     fetchSessionDetails();
-  }, [id]);
+  }, [sessionId]);
 
   const formatDate = (dateString: string) => {
     if (!dateString) return '';
@@ -160,7 +158,9 @@ const SessionDetailsPage = ({ params }: { params: Promise<{ id: string }> }) => 
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {sessionData.participants.map(participant => (
-                      <div key={participant.id} className="card bg-white rounded-lg border border-gray-100 p-4 flex items-center">
+                      
+                      <Link href={`/session/${sessionId}/participant/${participant.id}`} key={participant.id}>
+                        <div  className="card bg-white rounded-lg border border-gray-100 p-4 flex items-center">
                         <div className="w-12 h-12 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden mr-3">
                           {participant.face_snapshot_url ? (
                             <img 
@@ -183,6 +183,8 @@ const SessionDetailsPage = ({ params }: { params: Promise<{ id: string }> }) => 
                           <p className="text-xs text-gray-500">ID: {participant.id}</p>
                         </div>
                       </div>
+
+                      </Link>
                     ))}
                   </div>
                 )}

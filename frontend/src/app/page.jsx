@@ -36,10 +36,6 @@ const Dashboard = () => {
     fetchSessions();
   }, [session?.user?.userId]);
 
-  const handleViewDetails = () => {
-    router.push(`/session/${session?.user?.id}`);
-  };
-
   const filteredSessions = searchQuery
   ? sessions.filter(session =>
       (session.name?.toLowerCase() || '').includes(searchQuery.toLowerCase()))

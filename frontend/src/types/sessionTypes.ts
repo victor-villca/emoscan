@@ -16,8 +16,6 @@ export interface SessionCardsProps {
   sessions: Session[];
 }
 
-
-// For the session details page
 export interface Participant {
   id: number;
   session_id: number;
