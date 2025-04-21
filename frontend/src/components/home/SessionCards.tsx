@@ -9,7 +9,7 @@ const SessionCards: FC<SessionCardsProps> = ({ sessions }) => {
       {sessions.map((session) => (
         <div key={session.id}>
           <Link href={`/session/${session.id}`}>
-            <SessionCard  session={session} />
+            <SessionCard session={session} />
           </Link>
         </div>
       ))}

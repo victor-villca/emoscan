@@ -1,14 +1,13 @@
-
 import { FC } from 'react';
 import { SessionCardProps } from '@/types/sessionTypes';
 
 const SessionCard: FC<SessionCardProps> = ({ session }) => {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
     });
   };
 
@@ -25,23 +24,19 @@ const SessionCard: FC<SessionCardProps> = ({ session }) => {
   const determineStatus = () => {
     const sessionDate = new Date(session.date);
     const now = new Date();
-    
 
     if (sessionDate < now) {
-  
       if (session.id % 10 === 0) return 'error';
       return 'complete';
     }
-    
 
     if (sessionDate.toDateString() === now.toDateString()) {
       return 'in-progress';
     }
-    
 
     return 'scheduled';
   };
-  
+
   const status = determineStatus();
 
   const getStatusColor = (status: string) => {
@@ -75,10 +70,18 @@ const SessionCard: FC<SessionCardProps> = ({ session }) => {
   };
 
   const facesDetected = (session.id * 3) % 15 || 5;
-  
-  const emotions = ['Happiness', 'Sadness', 'Neutral', 'Surprise', 'Fear', 'Anger', 'Disgust'];
+
+  const emotions = [
+    'Happiness',
+    'Sadness',
+    'Neutral',
+    'Surprise',
+    'Fear',
+    'Anger',
+    'Disgust',
+  ];
   const primaryEmotion = emotions[session.id % emotions.length];
-  
+
   const hasError = status === 'error';
 
   return (
@@ -86,12 +89,16 @@ const SessionCard: FC<SessionCardProps> = ({ session }) => {
       <div className="flex justify-between items-start mb-4">
         <div>
           <h2 className="font-bold text-gray-800">{session.name}</h2>
-          <h3 className="font-semibold text-gray-600">{formatDate(session.date)}</h3>
+          <h3 className="font-semibold text-gray-600">
+            {formatDate(session.date)}
+          </h3>
           <p className="text-sm text-gray-500">{timeRange}</p>
         </div>
         <div className="flex items-center">
           <span className={`status-dot ${getStatusColor(status)}`}></span>
-          <span className="text-xs font-medium text-gray-600">{getStatusText(status)}</span>
+          <span className="text-xs font-medium text-gray-600">
+            {getStatusText(status)}
+          </span>
         </div>
       </div>
       <div className="flex items-center mb-2">
@@ -104,7 +111,9 @@ const SessionCard: FC<SessionCardProps> = ({ session }) => {
         <div className="w-5 h-5 flex items-center justify-center text-gray-500">
           <i className="ri-user-smile-line"></i>
         </div>
-        <span className="ml-2 text-sm text-gray-700">{facesDetected} faces detected</span>
+        <span className="ml-2 text-sm text-gray-700">
+          {facesDetected} faces detected
+        </span>
       </div>
       <div className="flex items-center mb-4">
         {hasError ? (
@@ -112,14 +121,18 @@ const SessionCard: FC<SessionCardProps> = ({ session }) => {
             <div className="w-5 h-5 flex items-center justify-center text-gray-500">
               <i className="ri-error-warning-line"></i>
             </div>
-            <span className="ml-2 text-sm text-gray-700">Processing error occurred</span>
+            <span className="ml-2 text-sm text-gray-700">
+              Processing error occurred
+            </span>
           </>
         ) : status === 'in-progress' ? (
           <>
             <div className="w-5 h-5 flex items-center justify-center text-gray-500">
               <i className="ri-emotion-line"></i>
             </div>
-            <span className="ml-2 text-sm text-gray-700">Primary emotion: Analyzing...</span>
+            <span className="ml-2 text-sm text-gray-700">
+              Primary emotion: Analyzing...
+            </span>
           </>
         ) : status === 'scheduled' ? (
           <>
@@ -133,7 +146,9 @@ const SessionCard: FC<SessionCardProps> = ({ session }) => {
             <div className="w-5 h-5 flex items-center justify-center text-gray-500">
               <i className="ri-emotion-line"></i>
             </div>
-            <span className="ml-2 text-sm text-gray-700">Primary emotion: {primaryEmotion}</span>
+            <span className="ml-2 text-sm text-gray-700">
+              Primary emotion: {primaryEmotion}
+            </span>
           </>
         )}
       </div>
