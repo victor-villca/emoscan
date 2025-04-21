@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useEffect, useState } from 'react';
 import Head from 'next/head';
@@ -22,7 +22,9 @@ const Dashboard = () => {
     const fetchSessions = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/sessions?userId=${session.user.userId}`);
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/sessions?userId=${session.user.userId}`
+        );
         const data = await response.json();
         setSessions(data);
         setError(null);
@@ -37,24 +39,27 @@ const Dashboard = () => {
   }, [session?.user?.userId]);
 
   const filteredSessions = searchQuery
-  ? sessions.filter(session =>
-      (session.name?.toLowerCase() || '').includes(searchQuery.toLowerCase()))
-  : sessions;
+    ? sessions.filter((session) =>
+        (session.name?.toLowerCase() || '').includes(searchQuery.toLowerCase())
+      )
+    : sessions;
 
-  // ✅ If not logged in
-  if (status === "unauthenticated") {
+  if (status === 'unauthenticated') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F8F9FA] text-center px-4">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-800 mb-4">Please log in to view your sessions</h1>
-          <p className="text-gray-600">You must be signed in to access the dashboard.</p>
+          <h1 className="text-2xl font-semibold text-gray-800 mb-4">
+            Please log in to view your sessions
+          </h1>
+          <p className="text-gray-600">
+            You must be signed in to access the dashboard.
+          </p>
         </div>
       </div>
     );
   }
 
-  // ✅ While loading the session
-  if (status === "loading") {
+  if (status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F8F9FA]">
         <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
@@ -62,7 +67,6 @@ const Dashboard = () => {
     );
   }
 
-  // ✅ Main dashboard
   return (
     <>
       <div className="min-h-screen bg-[#F8F9FA]">
@@ -71,15 +75,17 @@ const Dashboard = () => {
 
           <div className="mb-8">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-gray-800">Recent Sessions</h2>
+              <h2 className="text-xl font-semibold text-gray-800">
+                Recent Sessions
+              </h2>
               <div className="relative">
                 <div className="flex items-center bg-white rounded-lg shadow-sm px-3 py-2">
                   <div className="w-5 h-5 flex items-center justify-center text-gray-400">
                     <i className="ri-search-line"></i>
                   </div>
-                  <input 
-                    type="text" 
-                    placeholder="Search sessions" 
+                  <input
+                    type="text"
+                    placeholder="Search sessions"
                     className="ml-2 text-sm border-none bg-transparent w-40 md:w-60"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
