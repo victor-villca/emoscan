@@ -19,7 +19,7 @@ const SessionDetailsPage = ({ params }: { params: Promise<{ sessionId: string }>
       
       try {
         setIsLoading(true);
-        const response = await fetch(`http://localhost:4000/api/sessions/${sessionId}`);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/sessions/${sessionId}`);
         
         if (!response.ok) {
           throw new Error(`Failed to fetch session details. Status: ${response.status}`);

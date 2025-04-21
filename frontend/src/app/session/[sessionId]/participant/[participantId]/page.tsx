@@ -57,7 +57,7 @@ export default function ParticipantReport({
     console.log(participantId)
     const fetchData = async () => {
       try {
-        const response = await fetch(`http://localhost:4000/api/sessions/participant/${participantId}`);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/sessions/participant/${participantId}`);
         if (!response.ok) {
           throw new Error('Failed to fetch participant data');
         }

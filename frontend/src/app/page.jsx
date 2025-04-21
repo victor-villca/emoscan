@@ -22,7 +22,7 @@ const Dashboard = () => {
     const fetchSessions = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch(`http://localhost:4000/api/sessions?userId=${session.user.userId}`);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/sessions?userId=${session.user.userId}`);
         const data = await response.json();
         setSessions(data);
         setError(null);
