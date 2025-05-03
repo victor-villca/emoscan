@@ -1,0 +1,45 @@
+<div class="container">
+    <div class="header">
+        <h1 class="app-title">EmoScan</h1>
+        <div class="status-indicator">
+            <div id="status-dot" class="status-dot"></div>
+            <span id="status-text" class="status-text">Inactiva</span>
+        </div>
+    </div>
+    <div class="main">
+        <div class="action-container">
+            <button id="action-button" class="action-button">
+                <i class="ri-camera-line" style="font-size: 24px;"></i>
+            </button>
+            <p id="action-text" class="action-text">Iniciar Captura</p>
+        </div>
+        <div class="options-panel">
+            <div class="option-row">
+                <span class="option-text">Detección automática</span>
+                <label class="toggle">
+                    <input type="checkbox" id="auto-detection" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            <div class="option-row">
+                <span class="option-text">Notificaciones</span>
+                <label class="toggle">
+                    <input type="checkbox" id="notifications">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+        <div class="stats-panel">
+            <p class="stats-label">Rostros Detectados</p>
+            <div id="counter" class="counter">0</div>
+            <div class="session-info">
+                <span>Sesión actual</span>
+                <span id="session-time">00:00:00</span>
+            </div>
+        </div>
+    </div>
+    <div class="footer">
+        <span>Última actualización: <span id="last-update">Nunca</span></span>
+        <button id="reset-button" class="reset-button">Reiniciar</button>
+    </div>
+</div>
