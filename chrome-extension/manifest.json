@@ -20,7 +20,7 @@
   "web_accessible_resources": [
     {
       "resources": ["ui/*", "assets/*"],
-      "matches": ["<all_urls>"]
+      "matches": ["https://meet.google.com/*"]
     }
   ]
 }

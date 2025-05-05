@@ -4,7 +4,7 @@ chrome.action.onClicked.addListener((tab) => {
       target: { tabId: tab.id },
       files: [
         "content/controllers/overlayController.js",
-        "content/content.js",
+        "content/content.js"
       ]
     });
   } else {
