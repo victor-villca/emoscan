@@ -1,3 +1,9 @@
+function initializeOverlay() {
+  const overlay = createOverlay();
+  addStylesheet();
+  loadOverlayContent(overlay);
+}
+
 function createOverlay() {
   const existingOverlay = document.getElementById("custom-overlay");
   if (existingOverlay) existingOverlay.remove();
@@ -10,7 +16,7 @@ function createOverlay() {
     right: "20px",
     zIndex: 9999,
     width: "300px",
-    height: "500px",
+    height: "450px",
     borderRadius: "12px",
     backgroundColor: "rgba(255, 255, 255, 0.8)",
     backdropFilter: "blur(5px)",
@@ -23,7 +29,7 @@ function createOverlay() {
 function addStylesheet() {
   const style = document.createElement("link");
   style.rel = "stylesheet";
-  style.href = chrome.runtime.getURL("ui.css");
+  style.href = chrome.runtime.getURL("ui/ui.css");
   document.head.appendChild(style);
 }
 
@@ -50,18 +56,41 @@ function makeOverlayDraggable(overlay) {
 }
 
 function loadOverlayContent(overlay) {
-  fetch(chrome.runtime.getURL("ui.html"))
+  fetch(chrome.runtime.getURL("ui/ui.html"))
     .then(response => response.text())
     .then(html => {
       overlay.innerHTML = html;
       makeOverlayDraggable(overlay);
+      initializeUIHandlers();
     });
 }
 
-function initializeOverlay() {
-  const overlay = createOverlay();
-  addStylesheet();
-  loadOverlayContent(overlay);
-}
+let controller;
 
+function initializeUIHandlers() {
+  const actionButton = document.getElementById('action-button');
+  const statusDot = document.getElementById('status-dot');
+  const statusText = document.getElementById('status-text');
+  const actionText = document.getElementById('action-text');
+
+  controller = new OverlayController();
+
+  if (actionButton) {
+    actionButton.addEventListener('click', () => {
+      const isActive = actionButton.classList.toggle('active');
+
+      if (isActive) {
+        statusDot.classList.add('active');
+        statusText.textContent = 'Activa';
+        actionText.textContent = 'Detener Captura';
+        controller.init();
+      } else {
+        statusDot.classList.remove('active');
+        statusText.textContent = 'Inactiva';
+        actionText.textContent = 'Iniciar Captura';
+        controller.destroy();
+      }
+    });
+  }
+}
 initializeOverlay();
