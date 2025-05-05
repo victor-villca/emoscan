@@ -208,6 +208,39 @@ input:checked + .toggle-slider:before {
   padding: 0;
 }
 
-.reset-button:hover {
-  text-decoration: underline;
+
+.toggle-visibility-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #757575;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+}
+
+.toggle-visibility-button:hover {
+  color: #2196F3;
+}
+
+.restore-visibility-button {
+  background: white;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  transition: all 0.3s ease;
+  padding: 0;
+  overflow: hidden;
+}
+
+.restore-visibility-button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+
+.restore-visibility-button img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
