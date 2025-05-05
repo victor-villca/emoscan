@@ -66,19 +66,20 @@ function loadOverlayContent(overlay) {
 }
 
 let controller;
-
 function initializeUIHandlers() {
+  const toggleButton = document.getElementById('toggle-visibility');
   const actionButton = document.getElementById('action-button');
   const statusDot = document.getElementById('status-dot');
   const statusText = document.getElementById('status-text');
   const actionText = document.getElementById('action-text');
-
+  const overlay = document.getElementById('custom-overlay');
+  
   controller = new OverlayController();
-
+  
   if (actionButton) {
     actionButton.addEventListener('click', () => {
       const isActive = actionButton.classList.toggle('active');
-
+      
       if (isActive) {
         statusDot.classList.add('active');
         statusText.textContent = 'Activa';
@@ -92,5 +93,75 @@ function initializeUIHandlers() {
       }
     });
   }
+  
+  if (toggleButton && overlay) {
+    toggleButton.addEventListener('click', () => {
+      let restoreButton = document.getElementById('restore-visibility');      
+      if (!restoreButton) {
+        restoreButton = document.createElement('button');
+        restoreButton.id = 'restore-visibility';
+        restoreButton.className = 'restore-visibility-button';
+        const appIcon = document.createElement('img');
+        appIcon.src = chrome.runtime.getURL('assets/icon.png');
+        appIcon.alt = 'EmoScan';
+        appIcon.style.width = '30px';
+        appIcon.style.height = '30px';
+        restoreButton.appendChild(appIcon);
+        const toggleButtonRect = toggleButton.getBoundingClientRect();
+        Object.assign(restoreButton.style, {
+          position: 'fixed',
+          top: `${toggleButtonRect.top}px`,
+          right: `${window.innerWidth - toggleButtonRect.right}px`,
+          zIndex: 10000,
+          width: '40px',
+          height: '40px',
+          borderRadius: '50%',
+          backgroundColor: 'rgba(255, 255, 255, 0.9)',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          border: 'none'
+        });
+        makeDraggable(restoreButton);
+        restoreButton.addEventListener('click', () => {
+          const restoreButtonRect = restoreButton.getBoundingClientRect();
+          overlay.style.position = 'fixed';
+          overlay.style.top = `${restoreButtonRect.top}px`;
+          overlay.style.right = `${window.innerWidth - restoreButtonRect.right}px`;
+          overlay.style.display = 'block';
+          restoreButton.remove();
+        });
+        
+        document.body.appendChild(restoreButton);
+      }
+      overlay.style.display = 'none';
+    });
+  }
 }
+
+function makeDraggable(element) {
+  let isDragging = false;
+  let offsetX, offsetY;
+
+  element.addEventListener("mousedown", (e) => {
+    isDragging = true;
+    offsetX = e.clientX - element.getBoundingClientRect().left;
+    offsetY = e.clientY - element.getBoundingClientRect().top;
+    e.preventDefault();
+  });
+
+  document.addEventListener("mousemove", (e) => {
+    if (!isDragging) return;
+    element.style.left = `${e.clientX - offsetX}px`;
+    element.style.top = `${e.clientY - offsetY}px`;
+    element.style.right = "auto";
+  });
+
+  document.addEventListener("mouseup", () => {
+    isDragging = false;
+  });
+}
+
 initializeOverlay();
