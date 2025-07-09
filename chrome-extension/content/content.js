@@ -38,9 +38,12 @@ function makeOverlayDraggable(overlay) {
   let offsetX, offsetY;
 
   overlay.addEventListener("mousedown", (e) => {
+    if (e.target !== overlay && !overlay.contains(e.target)) return;
+
     isDragging = true;
     offsetX = e.clientX - overlay.getBoundingClientRect().left;
     offsetY = e.clientY - overlay.getBoundingClientRect().top;
+    e.preventDefault();
   });
 
   document.addEventListener("mousemove", (e) => {
@@ -73,13 +76,14 @@ function initializeUIHandlers() {
   const statusText = document.getElementById('status-text');
   const actionText = document.getElementById('action-text');
   const overlay = document.getElementById('custom-overlay');
-  
+  const resetButton = document.getElementById('reset-button');
+
   controller = new OverlayController();
-  
+
   if (actionButton) {
     actionButton.addEventListener('click', () => {
       const isActive = actionButton.classList.toggle('active');
-      
+
       if (isActive) {
         statusDot.classList.add('active');
         statusText.textContent = 'Activa';
@@ -93,10 +97,11 @@ function initializeUIHandlers() {
       }
     });
   }
-  
+
   if (toggleButton && overlay) {
     toggleButton.addEventListener('click', () => {
-      let restoreButton = document.getElementById('restore-visibility');      
+      let restoreButton = document.getElementById('restore-visibility');
+
       if (!restoreButton) {
         restoreButton = document.createElement('button');
         restoreButton.id = 'restore-visibility';
@@ -107,11 +112,11 @@ function initializeUIHandlers() {
         appIcon.style.width = '30px';
         appIcon.style.height = '30px';
         restoreButton.appendChild(appIcon);
-        const toggleButtonRect = toggleButton.getBoundingClientRect();
+
         Object.assign(restoreButton.style, {
           position: 'fixed',
-          top: `${toggleButtonRect.top}px`,
-          right: `${window.innerWidth - toggleButtonRect.right}px`,
+          top: '20px',
+          right: '20px',
           zIndex: 10000,
           width: '40px',
           height: '40px',
@@ -124,21 +129,29 @@ function initializeUIHandlers() {
           cursor: 'pointer',
           border: 'none'
         });
-        makeDraggable(restoreButton);
+         makeDraggable(restoreButton);
+
         restoreButton.addEventListener('click', () => {
           const restoreButtonRect = restoreButton.getBoundingClientRect();
           overlay.style.position = 'fixed';
+          overlay.style.left = `${restoreButtonRect.left - 300}px`;
           overlay.style.top = `${restoreButtonRect.top}px`;
-          overlay.style.right = `${window.innerWidth - restoreButtonRect.right}px`;
+          overlay.style.right = 'auto';
           overlay.style.display = 'block';
           restoreButton.remove();
         });
-        
+
         document.body.appendChild(restoreButton);
       }
       overlay.style.display = 'none';
     });
   }
+
+   if (resetButton) {
+     resetButton.addEventListener('click', () => {
+       controller.resetSession();
+     });
+   }
 }
 
 function makeDraggable(element) {
@@ -163,5 +176,6 @@ function makeDraggable(element) {
     isDragging = false;
   });
 }
+
 
 initializeOverlay();

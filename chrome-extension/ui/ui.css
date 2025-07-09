@@ -9,6 +9,7 @@
   overflow: hidden;
   flex-direction: column;
 }
+
 .header {
   padding: 16px;
   border-bottom: 1px solid #e0e0e0;
@@ -79,6 +80,7 @@
   transition: all 300ms ease;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   margin-bottom: 10px;
+  font-size: 24px;
 }
 
 .action-button:hover {
@@ -224,13 +226,7 @@ input:checked + .toggle-slider:before {
 }
 
 .restore-visibility-button {
-  background: white;
-  border: none;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
   transition: all 0.3s ease;
-  padding: 0;
-  overflow: hidden;
 }
 
 .restore-visibility-button:hover {
