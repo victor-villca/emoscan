@@ -3,6 +3,7 @@ chrome.action.onClicked.addListener((tab) => {
     chrome.scripting.executeScript({
       target: { tabId: tab.id },
       files: [
+        "js/face-api.min.js",
         "content/controllers/overlayController.js",
         "content/content.js"
       ]

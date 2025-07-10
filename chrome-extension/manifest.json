@@ -2,12 +2,12 @@
   "manifest_version": 3,
   "name": "EmoScan Meet Helper",
   "version": "1.0",
-  "description": "Activa detección de rostros en videollamadas de Google Meet.",
-  "permissions": ["scripting", "activeTab"],
+  "description": "Detección de rostros en videollamadas de Google Meet",
+  "permissions": ["scripting", "activeTab", "tabs"],
   "host_permissions": ["https://meet.google.com/*"],
   "action": {
     "default_icon": "assets/icon.png",
-    "default_title": "Iniciar panel de detección"
+    "default_title": "Iniciar EmoScan"
   },
   "background": {
     "service_worker": "background/background.js"
@@ -19,7 +19,12 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["ui/*", "assets/*"],
+      "resources": [
+        "ui/*", 
+        "assets/*",
+        "js/face-api.min.js",
+        "js/models/*"
+      ],
       "matches": ["https://meet.google.com/*"]
     }
   ]
