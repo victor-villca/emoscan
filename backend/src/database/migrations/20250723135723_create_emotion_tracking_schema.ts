@@ -18,6 +18,7 @@ export async function up(knex: Knex): Promise<void> {
     table.increments('id').primary();
     table.integer('user_id').unsigned().notNullable();
     table.string('name').notNullable();
+    table.string('code').notNullable();
     table.date('date').notNullable();
     table.time('start_time').notNullable();
     table.time('end_time').notNullable();
