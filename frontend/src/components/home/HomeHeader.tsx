@@ -21,18 +21,21 @@ const DashboardHeader: FC<DashboardHeaderProps> = ({ name }) => {
   const createNewSession = async () => {
     const code = generateSessionCode();
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/sessions`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        user_id: session?.user?.userId,
-        name: sessionName.trim() || 'Untitled Session',
-        date: new Date().toISOString().split('T')[0],
-        start_time: '09:00',
-        end_time: '10:00',
-        code,
-      }),
-    });
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/sessions`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: session?.user?.userId,
+          name: sessionName.trim() || 'Untitled Session',
+          date: new Date().toISOString().split('T')[0],
+          start_time: '09:00',
+          end_time: '10:00',
+          code,
+        }),
+      }
+    );
 
     if (!res.ok) {
       const errText = await res.text();
@@ -50,7 +53,9 @@ const DashboardHeader: FC<DashboardHeaderProps> = ({ name }) => {
       <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">Hello, Dr. {name}</h1>
+            <h1 className="text-2xl font-bold text-gray-800">
+              Hello, Dr. {name}
+            </h1>
             <p className="text-gray-500 mt-1">
               {new Date().toLocaleDateString('en-US', {
                 weekday: 'long',
@@ -74,7 +79,9 @@ const DashboardHeader: FC<DashboardHeaderProps> = ({ name }) => {
       {isModalOpen && (
         <div className="fixed inset-0 bg-white/30 backdrop-blur-sm z-50 flex items-center justify-center">
           <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Name your session</h2>
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">
+              Name your session
+            </h2>
             <input
               type="text"
               placeholder="Untitled Session"

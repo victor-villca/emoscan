@@ -132,43 +132,58 @@ const SessionDetailsPage = ({
                 </div>
               </div>
 
-              <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                  Emotion Summary
-                </h2>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                  <EmotionCard
-                    label="Happiness"
-                    percentage={parseFloat(sessionData.emotionSummary.happy)}
-                    color="bg-green-500"
-                  />
-                  <EmotionCard
-                    label="Sadness"
-                    percentage={parseFloat(sessionData.emotionSummary.sadness)}
-                    color="bg-blue-500"
-                  />
-                  <EmotionCard
-                    label="Neutral"
-                    percentage={parseFloat(sessionData.emotionSummary.neutral)}
-                    color="bg-gray-400"
-                  />
-                  <EmotionCard
-                    label="Anger"
-                    percentage={parseFloat(sessionData.emotionSummary.angry)}
-                    color="bg-red-500"
-                  />
-                  <EmotionCard
-                    label="Surprise"
-                    percentage={parseFloat(sessionData.emotionSummary.surprise)}
-                    color="bg-yellow-500"
-                  />
-                  <EmotionCard
-                    label="Fear"
-                    percentage={parseFloat(sessionData.emotionSummary.fear)}
-                    color="bg-purple-500"
-                  />
+              {sessionData.emotionSummary ? (
+                <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+                  <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                    Emotion Summary
+                  </h2>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                    <EmotionCard
+                      label="Happiness"
+                      percentage={parseFloat(sessionData.emotionSummary.happy)}
+                      color="bg-green-500"
+                    />
+                    <EmotionCard
+                      label="Sadness"
+                      percentage={parseFloat(
+                        sessionData.emotionSummary.sadness
+                      )}
+                      color="bg-blue-500"
+                    />
+                    <EmotionCard
+                      label="Neutral"
+                      percentage={parseFloat(
+                        sessionData.emotionSummary.neutral
+                      )}
+                      color="bg-gray-400"
+                    />
+                    <EmotionCard
+                      label="Anger"
+                      percentage={parseFloat(sessionData.emotionSummary.angry)}
+                      color="bg-red-500"
+                    />
+                    <EmotionCard
+                      label="Surprise"
+                      percentage={parseFloat(
+                        sessionData.emotionSummary.surprise
+                      )}
+                      color="bg-yellow-500"
+                    />
+                    <EmotionCard
+                      label="Fear"
+                      percentage={parseFloat(sessionData.emotionSummary.fear)}
+                      color="bg-purple-500"
+                    />
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="bg-white rounded-lg shadow-sm p-6 mb-6 text-center">
+                  <p className="text-gray-500">
+                    This session has no emotional data yet. Live analysis has
+                    not started.
+                  </p>
+                </div>
+              )}
 
               <div className="bg-white rounded-lg shadow-sm p-6">
                 <h2 className="text-xl font-semibold text-gray-800 mb-4">
