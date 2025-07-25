@@ -9,6 +9,13 @@ export const createEmotionReport = (report: EmotionReport) => {
   return db<EmotionReport>('emotion_reports').insert(report);
 };
 
+export const createEmotionReportReturning = async (report: EmotionReport) => {
+  const [created] = await db<EmotionReport>('emotion_reports')
+    .insert(report)
+    .returning('*');
+  return created;
+};
+
 export const addEmotionMetric = (metric: EmotionMetric) => {
   return db<EmotionMetric>('emotion_metrics').insert(metric);
 };
@@ -25,22 +32,93 @@ export const addTransitionEvent = (event: EmotionTransition) => {
   return db<EmotionTransition>('emotion_transitions').insert(event);
 };
 export async function getEmotionReportByParticipant(participantId: number) {
-    return db<EmotionReport>('emotion_reports').where('participant_id', participantId).first();
+  return db<EmotionReport>('emotion_reports')
+    .where('participant_id', participantId)
+    .first();
+}
+
+export async function getEmotionMetrics(reportId: number) {
+  return db<EmotionMetric>('emotion_metrics').where(
+    'emotion_report_id',
+    reportId
+  );
+}
+
+export async function getEmotionSummary(sessionId: number) {
+  return db<EmotionSummary>('emotion_summaries')
+    .where('session_id', sessionId)
+    .first();
+}
+
+export async function getEmotionTimeline(sessionId: number) {
+  return db<EmotionTimeline>('emotion_timelines').where(
+    'session_id',
+    sessionId
+  );
+}
+
+export async function getEmotionTransitions(sessionId: number) {
+  return db<EmotionTransition>('emotion_transitions').where(
+    'session_id',
+    sessionId
+  );
+}
+
+export async function upsertEmotionSummary(
+  sessionId: number,
+  totals: Omit<EmotionSummary, 'id' | 'session_id'>
+) {
+  const exists = await getEmotionSummary(sessionId);
+  const payload = { session_id: sessionId, ...totals };
+
+  if (!exists) {
+    const [created] = await db<EmotionSummary>('emotion_summaries')
+      .insert(payload)
+      .returning('*');
+    return created;
+  } else {
+    const [updated] = await db<EmotionSummary>('emotion_summaries')
+      .where({ session_id: sessionId })
+      .update(payload)
+      .returning('*');
+    return updated;
   }
-  
-  export async function getEmotionMetrics(reportId: number) {
-    return db<EmotionMetric>('emotion_metrics').where('emotion_report_id', reportId);
+}
+
+export async function recomputeSessionSummary(sessionId: number) {
+  const rows = (await db('emotion_metrics as em')
+    .join('emotion_reports as er', 'er.id', 'em.emotion_report_id')
+    .join('participants as p', 'p.id', 'er.participant_id')
+    .where('p.session_id', sessionId)
+    .select('em.emotion_type_id')
+    .sum<{ emotion_type_id: number; total: string }>({ total: 'percentage' })
+    .groupBy('em.emotion_type_id')) as Array<{
+    emotion_type_id: number;
+    total: string;
+  }>;
+
+  const totals = {
+    happy: 0,
+    sadness: 0,
+    neutral: 0,
+    angry: 0,
+    surprise: 0,
+    fear: 0,
+  };
+
+  const EMOTION_ID_TO_NAME: Record<number, keyof typeof totals> = {
+    1: 'happy',
+    2: 'sadness',
+    3: 'neutral',
+    4: 'angry',
+    5: 'surprise',
+    6: 'fear',
+  };
+
+  for (const row of rows) {
+    const key = EMOTION_ID_TO_NAME[row.emotion_type_id];
+    if (key) totals[key] = Number(row.total) || 0;
   }
-  
-  export async function getEmotionSummary(sessionId: number) {
-    return db<EmotionSummary>('emotion_summaries').where('session_id', sessionId).first();
-  }
-  
-  export async function getEmotionTimeline(sessionId: number) {
-    return db<EmotionTimeline>('emotion_timelines').where('session_id', sessionId);
-  }
-  
-  export async function getEmotionTransitions(sessionId: number) {
-    return db<EmotionTransition>('emotion_transitions').where('session_id', sessionId);
-  }
-  
+
+  return totals;
+}
