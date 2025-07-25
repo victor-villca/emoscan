@@ -1,7 +1,14 @@
 import { Router } from 'express';
-import { getSessions, getSessionReport, getParticipantReport, createSession } from '../controllers/session.controller';
+import {
+  getSessions,
+  getSessionReport,
+  getParticipantReport,
+  createSession,
+  getSessionByCode,
+} from '../controllers/session.controller';
 
 const router = Router();
+
 /**
  * @swagger
  * tags:
@@ -31,6 +38,8 @@ const router = Router();
  *               user_id:
  *                 type: integer
  *               name:
+ *                 type: string
+ *               code:
  *                 type: string
  *               date:
  *                 type: string
@@ -65,6 +74,7 @@ router.post('/', createSession);
  */
 router.get('/', getSessions);
 
+router.get('/code/:code', getSessionByCode);
 
 /**
  * @swagger
@@ -83,6 +93,7 @@ router.get('/', getSessions);
  *         description: Reporte de sesión
  */
 router.get('/:sessionId', getSessionReport);
+
 /**
  * @swagger
  * /sessions/participant/{participantId}:

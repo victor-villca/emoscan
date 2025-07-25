@@ -22,7 +22,9 @@ export async function seed(knex: Knex): Promise<void> {
     if (record) {
       emotionTypeIds[record.name] = record.id;
     } else {
-      const existing = await knex('emotion_types').where({ name: emotion }).first();
+      const existing = await knex('emotion_types')
+        .where({ name: emotion })
+        .first();
       emotionTypeIds[emotion] = existing.id;
     }
   }

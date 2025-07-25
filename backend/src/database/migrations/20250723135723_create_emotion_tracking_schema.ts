@@ -23,7 +23,11 @@ export async function up(knex: Knex): Promise<void> {
     table.time('start_time').notNullable();
     table.time('end_time').notNullable();
     table.timestamp('created_at').defaultTo(knex.fn.now());
-    table.foreign('user_id').references('id').inTable('users').onDelete('CASCADE');
+    table
+      .foreign('user_id')
+      .references('id')
+      .inTable('users')
+      .onDelete('CASCADE');
   });
 
   await knex.schema.createTable('participants', (table) => {
@@ -31,13 +35,21 @@ export async function up(knex: Knex): Promise<void> {
     table.integer('session_id').unsigned().notNullable();
     table.string('name').notNullable();
     table.string('face_snapshot_url');
-    table.foreign('session_id').references('id').inTable('sessions').onDelete('CASCADE');
+    table
+      .foreign('session_id')
+      .references('id')
+      .inTable('sessions')
+      .onDelete('CASCADE');
   });
 
   await knex.schema.createTable('emotion_reports', (table) => {
     table.increments('id').primary();
     table.integer('participant_id').unsigned().notNullable();
-    table.foreign('participant_id').references('id').inTable('participants').onDelete('CASCADE');
+    table
+      .foreign('participant_id')
+      .references('id')
+      .inTable('participants')
+      .onDelete('CASCADE');
   });
 
   await knex.schema.createTable('emotion_metrics', (table) => {
@@ -46,7 +58,11 @@ export async function up(knex: Knex): Promise<void> {
     table.integer('emotion_type_id').unsigned().notNullable();
     table.decimal('percentage', 5, 2).notNullable();
     table.timestamp('detected_at').notNullable();
-    table.foreign('emotion_report_id').references('id').inTable('emotion_reports').onDelete('CASCADE');
+    table
+      .foreign('emotion_report_id')
+      .references('id')
+      .inTable('emotion_reports')
+      .onDelete('CASCADE');
     table.foreign('emotion_type_id').references('id').inTable('emotion_types');
   });
 
@@ -59,7 +75,11 @@ export async function up(knex: Knex): Promise<void> {
     table.decimal('angry', 5, 2).notNullable().defaultTo(0);
     table.decimal('surprise', 5, 2).notNullable().defaultTo(0);
     table.decimal('fear', 5, 2).notNullable().defaultTo(0);
-    table.foreign('session_id').references('id').inTable('sessions').onDelete('CASCADE');
+    table
+      .foreign('session_id')
+      .references('id')
+      .inTable('sessions')
+      .onDelete('CASCADE');
   });
 
   await knex.schema.createTable('emotion_timelines', (table) => {
@@ -67,8 +87,15 @@ export async function up(knex: Knex): Promise<void> {
     table.integer('session_id').unsigned().notNullable();
     table.timestamp('timestamp').notNullable();
     table.integer('primary_emotion_id').unsigned().notNullable();
-    table.foreign('session_id').references('id').inTable('sessions').onDelete('CASCADE');
-    table.foreign('primary_emotion_id').references('id').inTable('emotion_types');
+    table
+      .foreign('session_id')
+      .references('id')
+      .inTable('sessions')
+      .onDelete('CASCADE');
+    table
+      .foreign('primary_emotion_id')
+      .references('id')
+      .inTable('emotion_types');
   });
 
   await knex.schema.createTable('emotion_transitions', (table) => {
@@ -78,7 +105,11 @@ export async function up(knex: Knex): Promise<void> {
     table.integer('emotion_to_id').unsigned().notNullable();
     table.timestamp('started_at').notNullable();
     table.integer('duration_minutes').notNullable();
-    table.foreign('session_id').references('id').inTable('sessions').onDelete('CASCADE');
+    table
+      .foreign('session_id')
+      .references('id')
+      .inTable('sessions')
+      .onDelete('CASCADE');
     table.foreign('emotion_from_id').references('id').inTable('emotion_types');
     table.foreign('emotion_to_id').references('id').inTable('emotion_types');
   });

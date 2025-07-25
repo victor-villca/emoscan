@@ -1,26 +1,75 @@
 import { Request, Response } from 'express';
 import * as SessionService from '../services/session.service';
 
-export async function getSessions(req: Request, res: Response) {
-  const userId = req.query.userId as string;
-  const realUserId = parseInt(userId)
-  const sessions = await SessionService.listSessions(realUserId);
-  res.json(sessions);
-}
+export const getSessions = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = req.query.userId as string;
+    const realUserId = parseInt(userId);
+    const sessions = await SessionService.listSessions(realUserId);
+    res.json(sessions);
+  } catch (error) {
+    res.status(500).json({ error: 'Error retrieving sessions' });
+  }
+};
 
-export async function getSessionReport(req: Request, res: Response) {
-const { sessionId } = req.params;
-  const report = await SessionService.getFullSessionReport(parseInt(sessionId));
-  res.json(report);
-}
+export const getSessionReport = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { sessionId } = req.params;
+    const report = await SessionService.getFullSessionReport(
+      parseInt(sessionId)
+    );
+    res.json(report);
+  } catch (error) {
+    res.status(500).json({ error: 'Error retrieving session report' });
+  }
+};
 
-export async function getParticipantReport(req: Request, res: Response) {
-  const { participantId } = req.params;
-  const report = await SessionService.getParticipantReport(parseInt(participantId));
-  res.json(report);
-}
+export const getParticipantReport = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { participantId } = req.params;
+    const report = await SessionService.getParticipantReport(
+      parseInt(participantId)
+    );
+    res.json(report);
+  } catch (error) {
+    res.status(500).json({ error: 'Error retrieving participant report' });
+  }
+};
 
-export async function createSession(req: Request, res: Response) {
+export const createSession = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
     const result = await SessionService.create(req.body);
     res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: 'Error creating session' });
   }
+};
+
+export const getSessionByCode = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { code } = req.params;
+    const session = await SessionService.getSessionByCode(code);
+    if (!session) {
+      res.status(404).json({ message: 'Session not found' });
+      return;
+    }
+    res.json(session);
+  } catch (error) {
+    res.status(500).json({ error: 'Error retrieving session by code' });
+  }
+};
