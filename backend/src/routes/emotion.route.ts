@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import * as emotionService from '../services/emotion.service';
+import { handleEmotionDetection } from '../controllers/emotion.controller';
+import { ingestFromClient } from '../controllers/ingest.controller';
 
 const router = Router();
 
@@ -26,6 +28,15 @@ router.post('/timeline', async (req, res) => {
 router.post('/transition', async (req, res) => {
   const result = await emotionService.addTransition(req.body);
   res.json(result);
+});
+
+router.post('/detect', async (req, res) => {
+  const result = await handleEmotionDetection(req, res);
+  res.json(result);
+});
+
+router.post('/ingest', async (req, res) => {
+  await ingestFromClient(req, res);
 });
 
 export default router;
