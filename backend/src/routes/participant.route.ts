@@ -9,7 +9,9 @@ router.post('/', async (req, res) => {
 });
 
 router.get('/session/:sessionId', async (req, res) => {
-  const participants = await participantService.getBySession(parseInt(req.params.sessionId));
+  const participants = await participantService.getBySession(
+    parseInt(req.params.sessionId)
+  );
   res.json(participants);
 });
 export default router;

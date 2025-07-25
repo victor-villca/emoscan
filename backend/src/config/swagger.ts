@@ -8,7 +8,8 @@ const options: swaggerJsdoc.Options = {
     info: {
       title: 'EmoScan API',
       version: '1.0.0',
-      description: 'Documentación de la API para EmoScan (sesiones, emociones, usuarios)',
+      description:
+        'Documentación de la API para EmoScan (sesiones, emociones, usuarios)',
     },
     servers: [
       {
