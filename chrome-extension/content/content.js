@@ -178,4 +178,43 @@ function makeDraggable(element) {
 }
 
 
+function setupSessionValidation() {
+  const modal = document.getElementById("session-code-modal");
+  const input = document.getElementById("session-code-input");
+  const button = document.getElementById("validate-session-btn");
+  const errorText = document.getElementById("session-error");
+  
+  button.addEventListener("click", async () => {
+    const code = input.value.trim();
+    if (!code) return;
+    
+    try {
+      const response = await fetch(`http://localhost:3000/api/sessions/validate/${code}`, {
+        method: 'GET',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      });
+      const data = await response.json();
+      
+      if (response.ok && data.valid) {
+        window.sessionCode = code;
+        window.sessionData = data.session;
+        window.participantName = "anonymous";
+        modal.style.display = "none";
+        errorText.style.display = "none";
+      } else {
+        errorText.textContent = data.message || "Código de sesión inválido";
+        errorText.style.display = "block";
+      }
+    } catch (error) {
+      console.error('Error validating session:', error);
+      errorText.textContent = "Error de conexión. Intenta de nuevo.";
+      errorText.style.display = "block";
+    }
+  });
+}
+
 initializeOverlay();
+setupSessionValidation();

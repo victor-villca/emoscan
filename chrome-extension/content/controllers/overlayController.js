@@ -91,6 +91,8 @@ class OverlayController {
   }
 
   startFaceDetection() {
+    const sessionCode = window.sessionCode;
+    const participantName = window.participantName;
     this.faceDetectionInterval = setInterval(async () => {
       if (!this.isRecording) return;
       
@@ -117,7 +119,7 @@ class OverlayController {
 
           if (Date.now() - this.lastSend > this.SEND_INTERVAL) {
             this.lastSend = Date.now();
-            this.sendFaceToBackend(faceCanvas);
+            this.sendFaceToBackend(faceCanvas, sessionCode, participantName);
           }
         }
       } catch (error) {
@@ -126,15 +128,23 @@ class OverlayController {
     }, 1500);
   }
 
-  async sendFaceToBackend(canvas) {
+  async sendFaceToBackend(canvas, code, participantName) {
     try {
       const base64 = canvas.toDataURL("image/png");
-      await fetch('http://localhost:3000/api/faces', {
+      console.log(JSON.stringify({
+          code,
+          participantName,
+          timestamp: new Date().toISOString(),
+          image: base64
+        }))
+      await fetch('http://localhost:4000/api/emotions/ingest', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          image: base64,
-          timestamp: Date.now()
+          code,
+          participantName,
+          timestamp: new Date().toISOString(),
+          image: base64
         })
       });
     } catch (error) {
