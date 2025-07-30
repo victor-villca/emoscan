@@ -54,3 +54,31 @@ export async function getParticipantReport(participantId: number) {
 export async function getSessionByCode(code: string) {
   return SessionRepo.getSessionByCode(code);
 }
+
+
+export async function validateSessionCode(code: string) {
+  try {
+    const session = await SessionRepo.getSessionByCode(code);
+    
+    if (!session) {
+      return {
+        valid: false
+      };
+    }
+    
+    return {
+      valid: true,
+      session: {
+        id: session.id,
+        name: session.name,
+        code: session.code,
+        date: session.date,
+        start_time: session.start_time,
+        end_time: session.end_time
+      }
+    };
+  } catch (error) {
+    console.error('Error in validateSessionCode service:', error);
+    throw error;
+  }
+}

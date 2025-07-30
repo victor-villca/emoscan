@@ -49,6 +49,7 @@ export async function forwardToFastApi(
 
 export async function processIngestion(payload: IngestPayload) {
   const { sessionId, participantName, timestamp, imageBase64 } = payload;
+  return {ok:"ok"}
 
   const fastApi = await forwardToFastApi(imageBase64);
 
@@ -70,16 +71,16 @@ export async function processIngestion(payload: IngestPayload) {
     primary_emotion_id: primaryEmotionId,
   });
 
-  for (const [name, value] of Object.entries(fastApi.confidences)) {
-    const emotion_type_id = mapEmotionToId(name);
-    await addEmotionMetric({
-      id: undefined as any,
-      emotion_report_id: report.id,
-      emotion_type_id,
-      percentage: Math.round(value * 10000) / 100,
-      detected_at: timestamp,
-    });
-  }
+  // for (const [name, value] of Object.entries(fastApi.confidences)) {
+  //   const emotion_type_id = mapEmotionToId(name);
+  //   await addEmotionMetric({
+  //     id: undefined as any,
+  //     emotion_report_id: report.id,
+  //     emotion_type_id,
+  //     percentage: Math.round(value * 10000) / 100,
+  //     detected_at: timestamp,
+  //   });
+  // }
 
   const totals = await recomputeSessionSummary(sessionId);
   await upsertEmotionSummary(sessionId, totals);
