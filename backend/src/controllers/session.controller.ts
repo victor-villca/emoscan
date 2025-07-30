@@ -73,3 +73,38 @@ export const getSessionByCode = async (
     res.status(500).json({ error: 'Error retrieving session by code' });
   }
 };
+
+export const validateSessionCode = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { code } = req.params;
+    
+    if (!code || code.trim() === '') {
+      res.status(400).json({ 
+        valid: false, 
+        message: 'Session code is required' 
+      });
+      return;
+    }
+
+    const result = await SessionService.validateSessionCode(code.trim());
+    
+    if (result.valid) {
+      res.json({
+        valid: true,
+        message: 'Session code is valid',
+        session: result.session
+      });
+    } else {
+      res.status(404).json({
+        valid: false,
+        message: 'Invalid session code'
+      });
+    }
+  } catch (error) {
+    console.error('Error validating session code:', error);
+    res.status(500).json({ error: 'Error validating session code' });
+  }
+};

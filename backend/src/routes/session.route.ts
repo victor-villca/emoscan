@@ -5,6 +5,7 @@ import {
   getParticipantReport,
   createSession,
   getSessionByCode,
+  validateSessionCode
 } from '../controllers/session.controller';
 
 const router = Router();
@@ -111,5 +112,68 @@ router.get('/:sessionId', getSessionReport);
  *         description: Reporte emocional por participante
  */
 router.get('/participant/:participantId', getParticipantReport);
+/**
+ * @swagger
+ * /sessions/validate/{code}:
+ *   get:
+ *     summary: Valida si un código de sesión existe y es válido
+ *     tags: [Sessions]
+ *     parameters:
+ *       - in: path
+ *         name: code
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Código de la sesión a validar
+ *         example: "ABC123"
+ *     responses:
+ *       200:
+ *         description: Código válido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 valid:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Session code is valid"
+ *                 session:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                     name:
+ *                       type: string
+ *                     code:
+ *                       type: string
+ *                     date:
+ *                       type: string
+ *                     start_time:
+ *                       type: string
+ *                     end_time:
+ *                       type: string
+ *       404:
+ *         description: Código inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 valid:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Invalid session code"
+ *       400:
+ *         description: Código requerido
+ *       500:
+ *         description: Error del servidor
+ */
+router.get('/validate/:code', validateSessionCode);
+
 
 export default router;
