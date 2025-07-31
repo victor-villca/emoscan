@@ -19,6 +19,7 @@ export async function ingestFromClient(req: Request, res: Response) {
     }
 
     const result = await processIngestion({
+      sessionCode: code,
       sessionId: Number(session.id),
       participantName,
       imageBase64: image,
