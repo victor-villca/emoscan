@@ -80,27 +80,27 @@ export const validateSessionCode = async (
 ): Promise<void> => {
   try {
     const { code } = req.params;
-    
+
     if (!code || code.trim() === '') {
-      res.status(400).json({ 
-        valid: false, 
-        message: 'Session code is required' 
+      res.status(400).json({
+        valid: false,
+        message: 'Session code is required',
       });
       return;
     }
 
     const result = await SessionService.validateSessionCode(code.trim());
-    
+
     if (result.valid) {
       res.json({
         valid: true,
         message: 'Session code is valid',
-        session: result.session
+        session: result.session,
       });
     } else {
       res.status(404).json({
         valid: false,
-        message: 'Invalid session code'
+        message: 'Invalid session code',
       });
     }
   } catch (error) {
