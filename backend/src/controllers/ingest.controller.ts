@@ -3,9 +3,8 @@ import { processIngestion } from '../services/emotion.service';
 import * as SessionRepo from '../repositories/session.repository';
 
 export async function ingestFromClient(req: Request, res: Response) {
+  const { code, participantName, image, timestamp } = req.body;
   try {
-    const { code, participantName, image, timestamp } = req.body;
-
     if (!code || !participantName || !image || !timestamp) {
       return res.status(400).json({
         message: 'Missing fields: code, participantName, image, timestamp',
@@ -28,7 +27,11 @@ export async function ingestFromClient(req: Request, res: Response) {
 
     return res.status(200).json({ ok: true, result });
   } catch (e) {
-    console.error('[ingestFromClient]', e);
-    return res.status(500).json({ message: 'Internal error' });
+    const error = e instanceof Error ? e.message : String(e);
+    console.error(
+      `[ingestFromClient] Error for session code "${code}" and participant "${participantName}":`,
+      error
+    );
+    return res.status(500).json({ message: 'Internal server error' });
   }
 }

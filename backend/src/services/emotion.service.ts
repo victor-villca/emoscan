@@ -1,6 +1,5 @@
 import axios from 'axios';
 import {
-  addEmotionMetric,
   addTimelineEvent,
   createEmotionReportReturning,
   getEmotionReportByParticipant,
@@ -8,6 +7,10 @@ import {
   recomputeSessionSummary,
 } from '../repositories/emotion.repository';
 import { getOrCreateParticipant } from '../repositories/participant.repository';
+import { ok } from 'assert';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 type FastApiResponse = {
   primary_emotion: string;
@@ -22,17 +25,9 @@ type IngestPayload = {
   imageBase64: string;
 };
 
-const EMOTION_NAME_TO_ID: Record<string, number> = {
-  happy: 1,
-  sadness: 2,
-  neutral: 3,
-  angry: 4,
-  surprise: 5,
-  fear: 6,
-};
-
-function mapEmotionToId(name: string) {
-  return EMOTION_NAME_TO_ID[name.toLowerCase()] ?? 3;
+const EMOTION_API_URL = process.env.EMOTION_API_URL;
+if (!EMOTION_API_URL) {
+  throw new Error('EMOTION_API_URL is not defined in environment variables');
 }
 
 export async function forwardToFastApi(
@@ -48,47 +43,8 @@ export async function forwardToFastApi(
 }
 
 export async function processIngestion(payload: IngestPayload) {
-  const { sessionId, participantName, timestamp, imageBase64 } = payload;
-  return {ok:"ok"}
+  const { imageBase64 } = payload;
 
-  const fastApi = await forwardToFastApi(imageBase64);
-
-  const participant = await getOrCreateParticipant(sessionId, participantName);
-
-  let report = await getEmotionReportByParticipant(participant.id);
-  if (!report) {
-    report = await createEmotionReportReturning({
-      id: 0 as any,
-      participant_id: participant.id,
-    });
-  }
-
-  const primaryEmotionId = mapEmotionToId(fastApi.primary_emotion);
-  await addTimelineEvent({
-    id: undefined as any,
-    session_id: sessionId,
-    timestamp,
-    primary_emotion_id: primaryEmotionId,
-  });
-
-  // for (const [name, value] of Object.entries(fastApi.confidences)) {
-  //   const emotion_type_id = mapEmotionToId(name);
-  //   await addEmotionMetric({
-  //     id: undefined as any,
-  //     emotion_report_id: report.id,
-  //     emotion_type_id,
-  //     percentage: Math.round(value * 10000) / 100,
-  //     detected_at: timestamp,
-  //   });
-  // }
-
-  const totals = await recomputeSessionSummary(sessionId);
-  await upsertEmotionSummary(sessionId, totals);
-
-  return {
-    primary_emotion: fastApi.primary_emotion,
-    confidences: fastApi.confidences,
-  };
+  const fastApiResult = await forwardToFastApi(imageBase64);
+  return fastApiResult;
 }
-
-export * from './emotion.legacy';

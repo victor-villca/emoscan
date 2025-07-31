@@ -5,7 +5,7 @@ import {
   getParticipantReport,
   createSession,
   getSessionByCode,
-  validateSessionCode
+  validateSessionCode,
 } from '../controllers/session.controller';
 
 const router = Router();
@@ -174,6 +174,5 @@ router.get('/participant/:participantId', getParticipantReport);
  *         description: Error del servidor
  */
 router.get('/validate/:code', validateSessionCode);
-
 
 export default router;
