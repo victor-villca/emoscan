@@ -1,7 +1,9 @@
 import db from '../config/knex';
 import { Participant } from '../models/Participant';
 
-export const createParticipant = async (participant: Omit<Participant, 'id'>) => {
+export const createParticipant = async (
+  participant: Omit<Participant, 'id'>
+) => {
   const [created] = await db<Participant>('participants')
     .insert(participant)
     .returning('*');

@@ -11,6 +11,6 @@ export async function seed(knex: Knex): Promise<void> {
     { id: 5, name: 'surprise' },
     { id: 6, name: 'fear' },
   ];
-  
+
   await knex('emotion_types').insert(emotionTypes);
 }

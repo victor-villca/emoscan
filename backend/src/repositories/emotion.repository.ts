@@ -9,7 +9,9 @@ export const createEmotionReport = (report: EmotionReport) => {
   return db<EmotionReport>('emotion_reports').insert(report);
 };
 
-export const createEmotionReportReturning = async (report: Omit<EmotionReport, 'id'>) => {
+export const createEmotionReportReturning = async (
+  report: Omit<EmotionReport, 'id'>
+) => {
   const [created] = await db<EmotionReport>('emotion_reports')
     .insert(report)
     .returning('*');
@@ -87,15 +89,15 @@ export async function upsertEmotionSummary(
 }
 
 export async function recomputeSessionSummary(sessionId: number) {
-  const rows = await db('emotion_metrics as em')
+  const rows = (await db('emotion_metrics as em')
     .join('emotion_reports as er', 'er.id', 'em.emotion_report_id')
     .join('participants as p', 'p.id', 'er.participant_id')
     .where('p.session_id', sessionId)
     .groupBy('em.emotion_type_id')
     .select(
-        'em.emotion_type_id',
-        db.raw('AVG(em.percentage) as avg_percentage')
-    ) as Array<{ emotion_type_id: number; avg_percentage: string | number }>;
+      'em.emotion_type_id',
+      db.raw('AVG(em.percentage) as avg_percentage')
+    )) as Array<{ emotion_type_id: number; avg_percentage: string | number }>;
 
   const totals = {
     happy: 0,
@@ -124,15 +126,19 @@ export async function recomputeSessionSummary(sessionId: number) {
   return totals;
 }
 
-export const getOrCreateEmotionReport = async (participantId: number): Promise<EmotionReport> => {
+export const getOrCreateEmotionReport = async (
+  participantId: number
+): Promise<EmotionReport> => {
   let report = await db<EmotionReport>('emotion_reports')
     .where('participant_id', participantId)
     .first();
 
   if (!report) {
-    const newReport = await createEmotionReportReturning({ participant_id: participantId });
+    const newReport = await createEmotionReportReturning({
+      participant_id: participantId,
+    });
     report = newReport;
   }
-  
+
   return report;
 };

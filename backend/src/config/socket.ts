@@ -15,7 +15,9 @@ export function initializeSocket(httpServer: HttpServer) {
     console.log(`✅ Client connected: ${socket.id}`);
 
     socket.on('join_session', (sessionCode: string) => {
-      console.log(`👉 Client ${socket.id} is joining session room: ${sessionCode}`);
+      console.log(
+        `👉 Client ${socket.id} is joining session room: ${sessionCode}`
+      );
       socket.join(sessionCode);
     });
 
