@@ -9,14 +9,14 @@ export const createEmotionReport = (report: EmotionReport) => {
   return db<EmotionReport>('emotion_reports').insert(report);
 };
 
-export const createEmotionReportReturning = async (report: EmotionReport) => {
+export const createEmotionReportReturning = async (report: Omit<EmotionReport, 'id'>) => {
   const [created] = await db<EmotionReport>('emotion_reports')
     .insert(report)
     .returning('*');
   return created;
 };
 
-export const addEmotionMetric = (metric: EmotionMetric) => {
+export const addEmotionMetric = (metric: Omit<EmotionMetric, 'id'>) => {
   return db<EmotionMetric>('emotion_metrics').insert(metric);
 };
 
@@ -24,13 +24,14 @@ export const createEmotionSummary = (summary: EmotionSummary) => {
   return db<EmotionSummary>('emotion_summaries').insert(summary);
 };
 
-export const addTimelineEvent = (event: EmotionTimeline) => {
+export const addTimelineEvent = (event: Omit<EmotionTimeline, 'id'>) => {
   return db<EmotionTimeline>('emotion_timelines').insert(event);
 };
 
-export const addTransitionEvent = (event: EmotionTransition) => {
+export const addTransitionEvent = (event: Omit<EmotionTransition, 'id'>) => {
   return db<EmotionTransition>('emotion_transitions').insert(event);
 };
+
 export async function getEmotionReportByParticipant(participantId: number) {
   return db<EmotionReport>('emotion_reports')
     .where('participant_id', participantId)
@@ -86,16 +87,15 @@ export async function upsertEmotionSummary(
 }
 
 export async function recomputeSessionSummary(sessionId: number) {
-  const rows = (await db('emotion_metrics as em')
+  const rows = await db('emotion_metrics as em')
     .join('emotion_reports as er', 'er.id', 'em.emotion_report_id')
     .join('participants as p', 'p.id', 'er.participant_id')
     .where('p.session_id', sessionId)
-    .select('em.emotion_type_id')
-    .sum<{ emotion_type_id: number; total: string }>({ total: 'percentage' })
-    .groupBy('em.emotion_type_id')) as Array<{
-    emotion_type_id: number;
-    total: string;
-  }>;
+    .groupBy('em.emotion_type_id')
+    .select(
+        'em.emotion_type_id',
+        db.raw('AVG(em.percentage) as avg_percentage')
+    ) as Array<{ emotion_type_id: number; avg_percentage: string | number }>;
 
   const totals = {
     happy: 0,
@@ -117,8 +117,22 @@ export async function recomputeSessionSummary(sessionId: number) {
 
   for (const row of rows) {
     const key = EMOTION_ID_TO_NAME[row.emotion_type_id];
-    if (key) totals[key] = Number(row.total) || 0;
+    if (key) {
+      totals[key] = parseFloat(Number(row.avg_percentage).toFixed(2)) || 0;
+    }
   }
-
   return totals;
 }
+
+export const getOrCreateEmotionReport = async (participantId: number): Promise<EmotionReport> => {
+  let report = await db<EmotionReport>('emotion_reports')
+    .where('participant_id', participantId)
+    .first();
+
+  if (!report) {
+    const newReport = await createEmotionReportReturning({ participant_id: participantId });
+    report = newReport;
+  }
+  
+  return report;
+};
