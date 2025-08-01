@@ -142,3 +142,16 @@ export const getOrCreateEmotionReport = async (
 
   return report;
 };
+
+export const getDominantEmotionIdForParticipant = async (participantId: number): Promise<number | null> => {
+  const result = await db('emotion_metrics as em')
+    .join('emotion_reports as er', 'er.id', 'em.emotion_report_id')
+    .where('er.participant_id', participantId)
+    .select('em.emotion_type_id')
+    .sum('em.percentage as total_percentage')
+    .groupBy('em.emotion_type_id')
+    .orderBy('total_percentage', 'desc')
+    .first();
+
+  return result ? result.emotion_type_id : null;
+};

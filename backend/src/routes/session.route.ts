@@ -6,6 +6,7 @@ import {
   createSession,
   getSessionByCode,
   validateSessionCode,
+  getSessionParticipants
 } from '../controllers/session.controller';
 
 const router = Router();
@@ -76,42 +77,6 @@ router.post('/', createSession);
 router.get('/', getSessions);
 
 router.get('/code/:code', getSessionByCode);
-
-/**
- * @swagger
- * /sessions/{sessionId}:
- *   get:
- *     summary: Obtiene el reporte completo de una sesión
- *     tags: [Sessions]
- *     parameters:
- *       - in: path
- *         name: sessionId
- *         schema:
- *           type: integer
- *         required: true
- *     responses:
- *       200:
- *         description: Reporte de sesión
- */
-router.get('/:sessionId', getSessionReport);
-
-/**
- * @swagger
- * /sessions/participant/{participantId}:
- *   get:
- *     summary: Obtiene el reporte emocional de un participante
- *     tags: [Sessions]
- *     parameters:
- *       - in: path
- *         name: participantId
- *         schema:
- *           type: integer
- *         required: true
- *     responses:
- *       200:
- *         description: Reporte emocional por participante
- */
-router.get('/participant/:participantId', getParticipantReport);
 /**
  * @swagger
  * /sessions/validate/{code}:
@@ -174,5 +139,44 @@ router.get('/participant/:participantId', getParticipantReport);
  *         description: Error del servidor
  */
 router.get('/validate/:code', validateSessionCode);
+
+router.get('/:sessionId/participants', getSessionParticipants); 
+
+
+/**
+ * @swagger
+ * /sessions/participant/{participantId}:
+ *   get:
+ *     summary: Obtiene el reporte emocional de un participante
+ *     tags: [Sessions]
+ *     parameters:
+ *       - in: path
+ *         name: participantId
+ *         schema:
+ *           type: integer
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: Reporte emocional por participante
+ */
+router.get('/participant/:participantId', getParticipantReport);
+/**
+ * @swagger
+ * /sessions/{sessionId}:
+ *   get:
+ *     summary: Obtiene el reporte completo de una sesión
+ *     tags: [Sessions]
+ *     parameters:
+ *       - in: path
+ *         name: sessionId
+ *         schema:
+ *           type: integer
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: Reporte de sesión
+ */
+router.get('/:sessionId', getSessionReport);
+
 
 export default router;
