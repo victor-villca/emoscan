@@ -1,10 +1,23 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { SessionDetails } from '@/types/sessionTypes';
 import EmotionCard from '@/components/session/EmotionCard';
 import { use } from 'react';
+import StatCard from '@/components/session/StatCard';
+import EmotionTimelineChart from '@/components/session/EmotionTimelineChart';
+
+
+const emotionMap: Record<number, { name: string; icon: string; color: string }> = {
+  1: { name: 'Happy', icon: 'ri-emotion-happy-line', color: 'text-green-500' },
+  2: { name: 'Sadness', icon: 'ri-emotion-sad-line', color: 'text-blue-500' },
+  3: { name: 'Neutral', icon: 'ri-emotion-normal-line', color: 'text-gray-500' },
+  4: { name: 'Angry', icon: 'ri-emotion-unhappy-line', color: 'text-red-500' },
+  5: { name: 'Surprise', icon: 'ri-emotion-line', color: 'text-amber-500' },
+  6: { name: 'Fear', icon: 'ri-emotion-2-line', color: 'text-indigo-500' },
+};
+
 
 const SessionDetailsPage = ({
   params,
@@ -47,6 +60,41 @@ const SessionDetailsPage = ({
     fetchSessionDetails();
   }, [sessionId]);
 
+  const dominantSessionEmotion = useMemo(() => {
+  if (!sessionData?.emotionSummary) return null;
+  
+  try {
+    const summary = sessionData.emotionSummary;
+    
+    const apiToEmotionMap: Record<string, number> = {
+      'happy': 1,
+      'sadness': 2,
+      'neutral': 3, 
+      'angry': 4,
+      'surprise': 5,
+      'fear': 6
+    };
+    
+    let maxPercentage = 0;
+    let dominantEmotionId: number | null = null;
+    
+    Object.entries(summary).forEach(([emotionName, percentage]) => {
+      const emotionId = apiToEmotionMap[emotionName.toLowerCase()];
+      const percentageValue = parseFloat(percentage as string);
+      
+      if (emotionId && !isNaN(percentageValue) && percentageValue > maxPercentage) {
+        maxPercentage = percentageValue;
+        dominantEmotionId = emotionId;
+      }
+    });
+    
+    return dominantEmotionId ? emotionMap[dominantEmotionId] : null;
+  } catch (error) {
+    console.error('Error calculating dominant emotion:', error);
+    return null;
+  }
+}, [sessionData]);
+
   const formatDate = (dateString: string) => {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -57,6 +105,11 @@ const SessionDetailsPage = ({
     });
   };
 
+    const calculateDuration = (start: string, end: string) => {
+    const diff = new Date(`1970-01-01T${end}Z`).getTime() - new Date(`1970-01-01T${start}Z`).getTime();
+    return Math.round(diff / 60000);
+  }
+
   const formatTime = (timeString: string) => {
     if (!timeString) return '';
     const [hours, minutes] = timeString.split(':');
@@ -66,180 +119,95 @@ const SessionDetailsPage = ({
     return `${formattedHour}:${minutes} ${ampm}`;
   };
 
-  return (
-    <>
-      <Head>
-        <title>
-          {sessionData
-            ? `${sessionData.session.name} | Session Details`
-            : 'Session Details'}
-        </title>
-        <meta
-          name="description"
-          content="Session details and participant information"
-        />
-      </Head>
+   if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#F8F9FA] container mx-auto px-4 py-6 animate-pulse">
+        <div className="h-6 w-1/4 bg-gray-200 rounded mb-8"></div>
+        <div className="h-20 bg-gray-200 rounded-lg mb-6"></div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <div className="h-24 bg-gray-200 rounded-lg"></div>
+          <div className="h-24 bg-gray-200 rounded-lg"></div>
+          <div className="h-24 bg-gray-200 rounded-lg"></div>
+        </div>
+        <div className="bg-gray-200 rounded-lg h-96"></div>
+      </div>
+    );
+  }
 
+  if (error) {
+    return <div className="text-center py-20 text-red-500">{error}</div>;
+  }
+
+  if (!sessionData) {
+    return <div className="text-center py-20">Session not found.</div>;
+  }
+  
+  const { session, participants, emotionSummary, timeline } = sessionData;
+  const duration = calculateDuration(session.start_time, session.end_time);
+
+
+  return (
+   <>
+      <Head><title>{session.name} | Session Details</title></Head>
       <div className="min-h-screen bg-[#F8F9FA]">
         <main className="container mx-auto px-4 py-6">
-          <div className="mb-6">
-            <Link
-              href="/"
-              className="flex items-center text-primary font-medium"
-            >
-              <div className="w-5 h-5 flex items-center justify-center mr-1">
-                <i className="ri-arrow-left-line"></i>
+          <Link href="/" className="flex items-center text-primary font-medium mb-4"><i className="ri-arrow-left-line mr-1"></i>Back to Dashboard</Link>
+          
+          <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <div className="flex flex-col md:flex-row justify-between items-start">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-800">{session.name}</h1>
+                <p className="text-gray-500 mt-1">{formatDate(session.date)}</p>
               </div>
-              Back Home
-            </Link>
-          </div>
-
-          {isLoading ? (
-            <div className="text-center py-10">
-              <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading session details...</p>
-            </div>
-          ) : error ? (
-            <div className="bg-red-50 p-4 rounded-lg text-center">
-              <div className="w-10 h-10 flex items-center justify-center text-red-500 mx-auto mb-2">
-                <i className="ri-error-warning-line ri-2x"></i>
-              </div>
-              <p className="text-red-600">{error}</p>
-              <button className="mt-4 bg-red-100 text-red-600 px-4 py-2 rounded-md">
-                Try Again
+              <button className="btn-primary text-white font-medium px-6 py-3 rounded-lg mt-4 md:mt-0 flex items-center">
+                <i className="ri-download-line mr-2"></i>Export Report
               </button>
             </div>
-          ) : sessionData ? (
-            <>
-              <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
-                  <div>
-                    <h1 className="text-2xl font-bold text-gray-800">
-                      {sessionData.session.name}
-                    </h1>
-                    <p className="text-gray-500 mt-1">
-                      {formatDate(sessionData.session.date)} •{' '}
-                      {formatTime(sessionData.session.start_time)} -{' '}
-                      {formatTime(sessionData.session.end_time)}
-                    </p>
-                  </div>
-                  <button className="btn-primary text-white font-medium px-6 py-3 rounded-button mt-4 md:mt-0 whitespace-nowrap flex items-center">
-                    <div className="w-5 h-5 flex items-center justify-center mr-2">
-                      <i className="ri-download-line"></i>
-                    </div>
-                    Export Report
-                  </button>
-                </div>
-              </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <StatCard icon="ri-group-line" label="Participants" value={participants.length} color="text-blue-500" />
+            <StatCard icon="ri-time-line" label="Duration" value={`${duration} min`} color="text-purple-500" />
+            {dominantSessionEmotion && <StatCard icon={dominantSessionEmotion.icon} label="Dominant Emotion" value={dominantSessionEmotion.name} color={dominantSessionEmotion.color} />}
+          </div>
 
-              {sessionData.emotionSummary ? (
-                <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-                  <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                    Emotion Summary
-                  </h2>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                    <EmotionCard
-                      label="Happiness"
-                      percentage={parseFloat(sessionData.emotionSummary.happy)}
-                      color="bg-green-500"
-                    />
-                    <EmotionCard
-                      label="Sadness"
-                      percentage={parseFloat(
-                        sessionData.emotionSummary.sadness
-                      )}
-                      color="bg-blue-500"
-                    />
-                    <EmotionCard
-                      label="Neutral"
-                      percentage={parseFloat(
-                        sessionData.emotionSummary.neutral
-                      )}
-                      color="bg-gray-400"
-                    />
-                    <EmotionCard
-                      label="Anger"
-                      percentage={parseFloat(sessionData.emotionSummary.angry)}
-                      color="bg-red-500"
-                    />
-                    <EmotionCard
-                      label="Surprise"
-                      percentage={parseFloat(
-                        sessionData.emotionSummary.surprise
-                      )}
-                      color="bg-yellow-500"
-                    />
-                    <EmotionCard
-                      label="Fear"
-                      percentage={parseFloat(sessionData.emotionSummary.fear)}
-                      color="bg-purple-500"
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div className="bg-white rounded-lg shadow-sm p-6 mb-6 text-center">
-                  <p className="text-gray-500">
-                    This session has no emotional data yet. Live analysis has
-                    not started.
-                  </p>
-                </div>
-              )}
-
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                  Participants
-                </h2>
-                {sessionData.participants.length === 0 ? (
-                  <div className="text-center py-6">
-                    <p className="text-gray-500">
-                      No participants in this session
-                    </p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {sessionData.participants.map((participant) => (
-                      <Link
-                        href={`/session/${sessionId}/participant/${participant.id}`}
-                        key={participant.id}
-                      >
-                        <div className="card bg-white rounded-lg border border-gray-100 p-4 flex items-center">
-                          <div className="w-12 h-12 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden mr-3">
-                            {participant.face_snapshot_url ? (
-                              <img
-                                src={participant.face_snapshot_url}
-                                alt={participant.name}
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  target.src = 'https://via.placeholder.com/48';
-                                }}
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-gray-400">
-                                <i className="ri-user-line ri-lg"></i>
-                              </div>
-                            )}
-                          </div>
-                          <div>
-                            <h3 className="font-medium text-gray-800">
-                              {participant.name}
-                            </h3>
-                            <p className="text-xs text-gray-500">
-                              ID: {participant.id}
-                            </p>
-                          </div>
+          <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Session Emotion Timeline</h2>
+            {timeline && timeline.length > 0 ? (
+              <EmotionTimelineChart timeline={timeline} />
+            ) : (
+              <p className="text-gray-500 text-center py-10">No timeline data available for this session.</p>
+            )}
+          </div>
+          
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Participants</h2>
+            {participants.length === 0 ? (
+              <p className="text-gray-500 text-center py-10">No participants in this session.</p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {participants.map((participant) => {
+                  const dominantEmotion = emotionMap[participant.dominantEmotionId as keyof typeof emotionMap];
+                  return (
+                    <Link href={`/session/${sessionId}/participant/${participant.id}`} key={participant.id} className="block card p-4 border border-gray-200 rounded-lg hover:border-primary hover:shadow-lg">
+                      <div className="flex items-center">
+                        <img src={participant.face_snapshot_url || '/placeholder.png'} alt={participant.name} className="w-12 h-12 rounded-full object-cover mr-4"/>
+                        <div className="flex-1">
+                          <h3 className="font-medium text-gray-800">{participant.name}</h3>
+                          {dominantEmotion && (
+                            <div className={`text-xs font-semibold inline-flex items-center px-2 py-0.5 rounded-full ${dominantEmotion.color.replace('text-', 'bg-').replace('-500', '-100')} ${dominantEmotion.color}`}>
+                              <i className={`${dominantEmotion.icon} mr-1`}></i>
+                              {dominantEmotion.name}
+                            </div>
+                          )}
                         </div>
-                      </Link>
-                    ))}
-                  </div>
-                )}
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
-            </>
-          ) : (
-            <div className="bg-white rounded-lg shadow-sm p-6 text-center">
-              <p className="text-gray-600">Session not found</p>
-            </div>
-          )}
+            )}
+          </div>
         </main>
       </div>
     </>
