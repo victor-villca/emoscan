@@ -20,40 +20,50 @@ const EmotionTimelineChart = ({ timeline }: { timeline: TimelineEntry[] }) => {
           Time: ${new Date(data.value[0]).toLocaleTimeString()}<br/>
           Emotion: <strong>${data.emotionName}</strong>
         `;
-      }
+      },
     },
     xAxis: {
       type: 'time',
       axisLabel: {
-        formatter: (value: number) => new Date(value).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        formatter: (value: number) =>
+          new Date(value).toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
       },
     },
     yAxis: {
       type: 'category',
-      data: Object.values(emotionTypes).map(e => e.name),
+      data: Object.values(emotionTypes).map((e) => e.name),
       inverse: true,
     },
-    series: [{
-      type: 'line',
-      symbolSize: 10,
-      data: timeline.map(entry => ({
-        value: [new Date(entry.timestamp).getTime(), emotionTypes[entry.primary_emotion_id]?.name || 'Unknown'],
-        emotionName: emotionTypes[entry.primary_emotion_id]?.name || 'Unknown',
-        itemStyle: {
-          color: emotionTypes[entry.primary_emotion_id]?.color || '#ccc',
+    series: [
+      {
+        type: 'line',
+        symbolSize: 10,
+        data: timeline.map((entry) => ({
+          value: [
+            new Date(entry.timestamp).getTime(),
+            emotionTypes[entry.primary_emotion_id]?.name || 'Unknown',
+          ],
+          emotionName:
+            emotionTypes[entry.primary_emotion_id]?.name || 'Unknown',
+          itemStyle: {
+            color: emotionTypes[entry.primary_emotion_id]?.color || '#ccc',
+          },
+        })),
+        lineStyle: {
+          color: '#E5E7EB',
+          width: 2,
         },
-      })),
-      lineStyle: {
-        color: '#E5E7EB',
-        width: 2,
+        emphasis: {
+          itemStyle: {
+            borderColor: 'rgba(0,0,0,0.2)',
+            borderWidth: 2,
+          },
+        },
       },
-      emphasis: {
-        itemStyle: {
-          borderColor: 'rgba(0,0,0,0.2)',
-          borderWidth: 2,
-        }
-      }
-    }],
+    ],
     grid: {
       left: '10%',
       right: '5%',
@@ -61,7 +71,9 @@ const EmotionTimelineChart = ({ timeline }: { timeline: TimelineEntry[] }) => {
     },
   };
 
-  return <ReactECharts option={option} style={{ height: '400px', width: '100%' }} />;
+  return (
+    <ReactECharts option={option} style={{ height: '400px', width: '100%' }} />
+  );
 };
 
 export default EmotionTimelineChart;
