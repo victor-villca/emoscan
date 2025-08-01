@@ -2,11 +2,13 @@
 import { useState, useEffect, useMemo } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import { SessionDetails } from '@/types/sessionTypes';
-import EmotionCard from '@/components/session/EmotionCard';
+import { usePDFGenerator } from '@/hooks/usePDFGenerator';
 import { use } from 'react';
 import StatCard from '@/components/session/StatCard';
 import EmotionTimelineChart from '@/components/session/EmotionTimelineChart';
+import SummaryEmotionCard from '@/components/session/SummaryEmotionCard';
 
 const emotionMap: Record<
   number,
@@ -22,6 +24,15 @@ const emotionMap: Record<
   4: { name: 'Angry', icon: 'ri-emotion-unhappy-line', color: 'text-red-500' },
   5: { name: 'Surprise', icon: 'ri-emotion-line', color: 'text-amber-500' },
   6: { name: 'Fear', icon: 'ri-emotion-2-line', color: 'text-indigo-500' },
+};
+
+const apiNameToIdMap: Record<string, number> = {
+  happy: 1,
+  sadness: 2,
+  neutral: 3,
+  angry: 4,
+  surprise: 5,
+  fear: 6,
 };
 
 const SessionDetailsPage = ({
@@ -64,6 +75,17 @@ const SessionDetailsPage = ({
 
     fetchSessionDetails();
   }, [sessionId]);
+
+  const reportFileName = useMemo(() => {
+    if (!sessionData) return 'Session_Report';
+    const dateStr = new Date(sessionData.session.date).toISOString().split('T')[0];
+    return `Session_${sessionData.session.name.replace(' ', '_')}_${dateStr}`;
+  }, [sessionData]);
+
+  const { isGenerating, generatePDF } = usePDFGenerator({
+    fileName: reportFileName,
+    elementId: 'sessionReportContent'
+  });
 
   const dominantSessionEmotion = useMemo(() => {
     if (!sessionData?.emotionSummary) return null;
@@ -114,20 +136,23 @@ const SessionDetailsPage = ({
     });
   };
 
+  const formatTime = (timeString: string) => {
+    if (!timeString) return '';
+    const [hours, minutes] = timeString.split(':');
+    const date = new Date();
+    date.setHours(parseInt(hours), parseInt(minutes));
+    return date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+  };
+
   const calculateDuration = (start: string, end: string) => {
     const diff =
       new Date(`1970-01-01T${end}Z`).getTime() -
       new Date(`1970-01-01T${start}Z`).getTime();
     return Math.round(diff / 60000);
-  };
-
-  const formatTime = (timeString: string) => {
-    if (!timeString) return '';
-    const [hours, minutes] = timeString.split(':');
-    const hour = parseInt(hours);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const formattedHour = hour % 12 || 12;
-    return `${formattedHour}:${minutes} ${ampm}`;
   };
 
   if (isLoading) {
@@ -162,116 +187,146 @@ const SessionDetailsPage = ({
         <title>{session.name} | Session Details</title>
       </Head>
       <div className="min-h-screen bg-[#F8F9FA]">
-        <main className="container mx-auto px-4 py-6">
-          <Link
-            href="/"
-            className="flex items-center text-primary font-medium mb-4"
-          >
-            <i className="ri-arrow-left-line mr-1"></i>Back to Dashboard
-          </Link>
-
-          <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-            <div className="flex flex-col md:flex-row justify-between items-start">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-800">
-                  {session.name}
-                </h1>
-                <p className="text-gray-500 mt-1">{formatDate(session.date)}</p>
-              </div>
-              <button className="btn-primary text-white font-medium px-6 py-3 rounded-lg mt-4 md:mt-0 flex items-center">
-                <i className="ri-download-line mr-2"></i>Export Report
-              </button>
+        <main id="sessionReportContent" className="container mx-auto px-4 py-6 bg-white">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+            <div>
+              <Link
+                href="/"
+                className="flex items-center text-primary font-medium mb-4 text-sm"
+              >
+                <i className="ri-arrow-left-line mr-1"></i>Back to Dashboard
+              </Link>
+              <h1 className="text-3xl font-bold text-gray-800">
+                {session.name}
+              </h1>
+              <p className="text-gray-500 mt-1">
+                {formatDate(session.date)} • {formatTime(session.start_time)} - {formatTime(session.end_time)}
+              </p>
             </div>
+            <button 
+              onClick={generatePDF} 
+              disabled={isGenerating} 
+              className="btn-primary ont-medium items-center self-start md:self-center  bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition disabled:bg-blue-400 cursor-pointer disabled:cursor-not-allowed"
+            >
+              {isGenerating ? 'Generating...' : <><i className="ri-download-line mr-2"></i>Export Report</>}
+            </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <StatCard
-              icon="ri-group-line"
-              label="Participants"
-              value={participants.length}
-              color="text-blue-500"
-            />
-            <StatCard
-              icon="ri-time-line"
-              label="Duration"
-              value={`${duration} min`}
-              color="text-purple-500"
-            />
-            {dominantSessionEmotion && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ duration: 0.5 }}
+          >
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               <StatCard
-                icon={dominantSessionEmotion.icon}
-                label="Dominant Emotion"
-                value={dominantSessionEmotion.name}
-                color={dominantSessionEmotion.color}
+                icon="ri-group-line"
+                label="Participants"
+                value={participants.length}
+                color="text-blue-500"
               />
-            )}
-          </div>
+              <StatCard
+                icon="ri-time-line"
+                label="Duration"
+                value={`${duration} min`}
+                color="text-purple-500"
+              />
+              {dominantSessionEmotion && (
+                <StatCard
+                  icon={dominantSessionEmotion.icon}
+                  label="Dominant Emotion"
+                  value={dominantSessionEmotion.name}
+                  color={dominantSessionEmotion.color}
+                />
+              )}
+            </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">
-              Session Emotion Timeline
-            </h2>
-            {timeline && timeline.length > 0 ? (
-              <EmotionTimelineChart timeline={timeline} />
-            ) : (
-              <p className="text-gray-500 text-center py-10">
-                No timeline data available for this session.
-              </p>
-            )}
-          </div>
-
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">
-              Participants
-            </h2>
-            {participants.length === 0 ? (
-              <p className="text-gray-500 text-center py-10">
-                No participants in this session.
-              </p>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {participants.map((participant) => {
-                  const dominantEmotion =
-                    emotionMap[
-                      participant.dominantEmotionId as keyof typeof emotionMap
-                    ];
+            <div className="bg-white rounded-lg shadow-sm p-6 mb-6 border border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">Overall Emotion Summary</h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                {Object.entries(emotionSummary).map(([name, percentage]) => {
+                  const emotionId = apiNameToIdMap[name];
+                  if (!emotionId) return null;
+                  const emotion = emotionMap[emotionId];
                   return (
-                    <Link
-                      href={`/session/${sessionId}/participant/${participant.id}`}
-                      key={participant.id}
-                      className="block card p-4 border border-gray-200 rounded-lg hover:border-primary hover:shadow-lg"
-                    >
-                      <div className="flex items-center">
-                        <img
-                          src={
-                            participant.face_snapshot_url || '/placeholder.png'
-                          }
-                          alt={participant.name}
-                          className="w-12 h-12 rounded-full object-cover mr-4"
-                        />
-                        <div className="flex-1">
-                          <h3 className="font-medium text-gray-800">
-                            {participant.name}
-                          </h3>
-                          {dominantEmotion && (
-                            <div
-                              className={`text-xs font-semibold inline-flex items-center px-2 py-0.5 rounded-full ${dominantEmotion.color.replace('text-', 'bg-').replace('-500', '-100')} ${dominantEmotion.color}`}
-                            >
-                              <i className={`${dominantEmotion.icon} mr-1`}></i>
-                              {dominantEmotion.name}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </Link>
+                    <SummaryEmotionCard 
+                      key={name}
+                      name={emotion.name}
+                      icon={emotion.icon}
+                      percentage={parseFloat(percentage as string)}
+                      color={emotion.color}
+                    />
                   );
                 })}
               </div>
-            )}
-          </div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-sm p-6 mb-6 border border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                Session Emotion Timeline
+              </h2>
+              {timeline && timeline.length > 0 ? (
+                <EmotionTimelineChart timeline={timeline} />
+              ) : (
+                <p className="text-gray-500 text-center py-10">
+                  No timeline data available for this session.
+                </p>
+              )}
+            </div>
+
+            <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                Participants
+              </h2>
+              {participants.length === 0 ? (
+                <p className="text-gray-500 text-center py-10">
+                  No participants in this session.
+                </p>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {participants.map((participant) => {
+                    const dominantEmotion =
+                      emotionMap[
+                        participant.dominantEmotionId as keyof typeof emotionMap
+                      ];
+                    return (
+                      <Link
+                        href={`/session/${sessionId}/participant/${participant.id}`}
+                        key={participant.id}
+                        className="block card p-4 border border-gray-200 rounded-lg hover:border-primary hover:shadow-lg"
+                      >
+                        <div className="flex items-center">
+                          <img
+                            src={
+                              participant.face_snapshot_url || '/placeholder.png'
+                            }
+                            alt={participant.name}
+                            className="w-12 h-12 rounded-full object-cover mr-4"
+                          />
+                          <div className="flex-1">
+                            <h3 className="font-medium text-gray-800">
+                              {participant.name}
+                            </h3>
+                            {dominantEmotion && (
+                              <div
+                                className={`text-xs font-semibold inline-flex items-center px-2 py-0.5 rounded-full ${dominantEmotion.color.replace('text-', 'bg-').replace('-500', '-100')} ${dominantEmotion.color}`}
+                              >
+                                <i className={`${dominantEmotion.icon} mr-1`}></i>
+                                {dominantEmotion.name}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </motion.div>
         </main>
       </div>
     </>
   );
 };
+
 export default SessionDetailsPage;
