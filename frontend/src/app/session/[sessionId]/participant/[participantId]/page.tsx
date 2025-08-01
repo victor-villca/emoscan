@@ -134,7 +134,7 @@ export default function ParticipantReport({
             <button
               onClick={generatePDF}
               disabled={isGenerating}
-              className="flex items-center justify-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition disabled:bg-blue-400 transition cursor-pointer disabled:cursor-not-allowed"
+              className="flex items-center justify-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition disabled:bg-blue-400 cursor-pointer disabled:cursor-not-allowed"
             >
               {isGenerating ? (
                 <>
