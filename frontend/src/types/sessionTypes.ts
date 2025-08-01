@@ -8,12 +8,23 @@ export interface Session {
   created_at: string;
   status?: string;
 }
+
+export interface SessionListItem {
+  id: number;
+  name: string;
+  date: string;
+  start_time: string;
+  end_time: string;
+  participantCount: number;
+  durationMinutes: number;
+}
+
 export interface SessionCardProps {
-  session: Session;
+  session: SessionListItem;
 }
 
 export interface SessionCardsProps {
-  sessions: Session[];
+  sessions: SessionListItem[];
 }
 
 export interface Participant {
