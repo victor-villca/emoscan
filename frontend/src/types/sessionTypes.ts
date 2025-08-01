@@ -33,6 +33,9 @@ export interface Participant {
   name: string;
   face_snapshot_url: string;
 }
+export interface EnrichedParticipant extends Participant {
+  dominantEmotionId: number | null;
+}
 
 export interface EmotionSummary {
   id: number;
@@ -63,7 +66,7 @@ export interface EmotionTransition {
 
 export interface SessionDetails {
   session: Session;
-  participants: Participant[];
+  participants: EnrichedParticipant[];
   emotionSummary: EmotionSummary;
   timeline: TimelineEntry[];
   transitions: EmotionTransition[];
