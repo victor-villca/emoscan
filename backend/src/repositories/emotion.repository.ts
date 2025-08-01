@@ -157,3 +157,13 @@ export const getDominantEmotionIdForParticipant = async (
 
   return result ? result.emotion_type_id : null;
 };
+
+export const getAggregatedEmotionMetrics = async (reportId: number) => {
+  return db('emotion_metrics')
+    .where('emotion_report_id', reportId)
+    .groupBy('emotion_type_id')
+    .select(
+      'emotion_type_id',
+      db.raw('AVG(percentage)::numeric(5,2) as average_percentage')
+    ) as Promise<Array<{ emotion_type_id: number; average_percentage: string }>>;
+};

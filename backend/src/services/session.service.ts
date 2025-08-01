@@ -74,23 +74,24 @@ export async function getParticipantsForSession(sessionId: number) {
 
 export async function getParticipantReport(participantId: number) {
   const participant = await ParticipantRepo.getParticipantById(participantId);
+  if (!participant) return null;
+  const session = await SessionRepo.getSessionById(participant.session_id);
   const report = await EmotionRepo.getEmotionReportByParticipant(participantId);
-
   if (!report) {
-    return {
-      participant,
-      emotionReport: null,
-    };
+    return { participant, session, emotionReport: null };
   }
 
-  const metrics = await EmotionRepo.getEmotionMetrics(report.id);
+  const aggregatedMetrics = await EmotionRepo.getAggregatedEmotionMetrics(report.id);
+  const transitions = await EmotionRepo.getEmotionTransitions(participant.session_id);
 
   return {
     participant,
+    session,
     emotionReport: {
       ...report,
-      emotions: metrics,
+      emotions: aggregatedMetrics,
     },
+    transitions
   };
 }
 
