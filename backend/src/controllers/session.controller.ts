@@ -7,10 +7,21 @@ export const getSessions = async (
 ): Promise<void> => {
   try {
     const userId = req.query.userId as string;
-    const realUserId = parseInt(userId);
-    const sessions = await SessionService.listSessions(realUserId);
-    res.json(sessions);
+    const page = parseInt(req.query.page as string, 10) || 1;
+    const limit = parseInt(req.query.limit as string, 10) || 6;
+    if (!userId) {
+      res.status(400).json({ error: 'User ID is required' });
+      return;
+    }
+    const sessionsData = await SessionService.listSessions(
+      parseInt(userId),
+      page,
+      limit
+    );
+
+    res.json(sessionsData);
   } catch (error) {
+    console.error('Error in getSessions controller:', error);
     res.status(500).json({ error: 'Error retrieving sessions' });
   }
 };

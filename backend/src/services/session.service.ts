@@ -2,14 +2,42 @@ import * as SessionRepo from '../repositories/session.repository';
 import * as ParticipantRepo from '../repositories/participant.repository';
 import * as EmotionRepo from '../repositories/emotion.repository';
 import { Session } from '../models/Session';
-
+import { differenceInMinutes } from 'date-fns';
 export const create = async (session: Session) =>
   SessionRepo.createSession(session);
+
 export const getByUser = async (user_id: number) =>
   SessionRepo.getSessionsByUser(user_id);
 
-export async function listSessions(userId: number) {
-  return SessionRepo.getSessionsByUser(userId);
+export async function listSessions(
+  userId: number,
+  page: number,
+  limit: number
+) {
+  const offset = (page - 1) * limit;
+
+  const [totalSessions, sessions] = await Promise.all([
+    SessionRepo.countUserSessions(userId),
+    SessionRepo.getPaginatedSessionsByUser(userId, limit, offset),
+  ]);
+
+  const enrichedSessions = sessions.map((session: any) => {
+    const start = new Date(`${session.date}T${session.start_time}`);
+    const end = new Date(`${session.date}T${session.end_time}`);
+    const durationMinutes = differenceInMinutes(end, start);
+
+    return {
+      ...session,
+      participantCount: parseInt(session.participantCount, 10),
+      durationMinutes,
+    };
+  });
+
+  return {
+    sessions: enrichedSessions,
+    totalPages: Math.ceil(totalSessions / limit),
+    currentPage: page,
+  };
 }
 
 export async function getFullSessionReport(sessionId: number) {
