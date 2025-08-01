@@ -10,15 +10,15 @@ export const getSessions = async (
     const page = parseInt(req.query.page as string, 10) || 1;
     const limit = parseInt(req.query.limit as string, 10) || 6;
     if (!userId) {
-        res.status(400).json({ error: 'User ID is required' });
-        return;
+      res.status(400).json({ error: 'User ID is required' });
+      return;
     }
     const sessionsData = await SessionService.listSessions(
       parseInt(userId),
       page,
       limit
     );
-    
+
     res.json(sessionsData);
   } catch (error) {
     console.error('Error in getSessions controller:', error);

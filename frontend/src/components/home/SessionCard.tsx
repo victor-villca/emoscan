@@ -30,19 +30,19 @@ const SessionCard: FC<SessionCardProps> = ({ session }) => {
           <p className="text-sm text-gray-500">{formatDate(session.date)}</p>
         </div>
         <div className="flex items-center bg-green-100 text-green-700 text-xs font-semibold px-2.5 py-1 rounded-full">
-            <span className="w-2 h-2 mr-1.5 bg-green-500 rounded-full"></span>
-            Complete
+          <span className="w-2 h-2 mr-1.5 bg-green-500 rounded-full"></span>
+          Complete
         </div>
       </div>
-      
+
       <div className="space-y-3 text-sm text-gray-700 my-6">
         <div className="flex items-center">
-            <i className="ri-group-line text-gray-400 w-5 text-center mr-2"></i>
-            <span>{session.participantCount} Participants</span>
+          <i className="ri-group-line text-gray-400 w-5 text-center mr-2"></i>
+          <span>{session.participantCount} Participants</span>
         </div>
         <div className="flex items-center">
-            <i className="ri-time-line text-gray-400 w-5 text-center mr-2"></i>
-            <span>{session.durationMinutes} minutes duration</span>
+          <i className="ri-time-line text-gray-400 w-5 text-center mr-2"></i>
+          <span>{session.durationMinutes} minutes duration</span>
         </div>
       </div>
 

@@ -9,23 +9,27 @@ export const create = async (session: Session) =>
 export const getByUser = async (user_id: number) =>
   SessionRepo.getSessionsByUser(user_id);
 
-export async function listSessions(userId: number, page: number, limit: number) {
+export async function listSessions(
+  userId: number,
+  page: number,
+  limit: number
+) {
   const offset = (page - 1) * limit;
 
   const [totalSessions, sessions] = await Promise.all([
     SessionRepo.countUserSessions(userId),
-    SessionRepo.getPaginatedSessionsByUser(userId, limit, offset)
+    SessionRepo.getPaginatedSessionsByUser(userId, limit, offset),
   ]);
-  
+
   const enrichedSessions = sessions.map((session: any) => {
     const start = new Date(`${session.date}T${session.start_time}`);
     const end = new Date(`${session.date}T${session.end_time}`);
     const durationMinutes = differenceInMinutes(end, start);
-    
+
     return {
       ...session,
       participantCount: parseInt(session.participantCount, 10),
-      durationMinutes
+      durationMinutes,
     };
   });
 
