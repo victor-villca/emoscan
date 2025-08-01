@@ -143,7 +143,9 @@ export const getOrCreateEmotionReport = async (
   return report;
 };
 
-export const getDominantEmotionIdForParticipant = async (participantId: number): Promise<number | null> => {
+export const getDominantEmotionIdForParticipant = async (
+  participantId: number
+): Promise<number | null> => {
   const result = await db('emotion_metrics as em')
     .join('emotion_reports as er', 'er.id', 'em.emotion_report_id')
     .where('er.participant_id', participantId)

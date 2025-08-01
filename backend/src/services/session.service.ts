@@ -7,7 +7,6 @@ import { differenceInMinutes } from 'date-fns';
 export const create = async (session: Omit<Session, 'id'>) =>
   SessionRepo.createSession(session);
 
-
 export const getByUser = async (user_id: number) =>
   SessionRepo.getSessionsByUser(user_id);
 
@@ -49,7 +48,8 @@ export async function getFullSessionReport(sessionId: number) {
     await ParticipantRepo.getParticipantsBySession(sessionId);
   const enrichedParticipants = await Promise.all(
     participants.map(async (participant) => {
-      const dominantEmotionId = await EmotionRepo.getDominantEmotionIdForParticipant(participant.id);
+      const dominantEmotionId =
+        await EmotionRepo.getDominantEmotionIdForParticipant(participant.id);
       return { ...participant, dominantEmotionId };
     })
   );
@@ -69,7 +69,7 @@ export async function getFullSessionReport(sessionId: number) {
 }
 
 export async function getParticipantsForSession(sessionId: number) {
-    return ParticipantRepo.getParticipantsBySession(sessionId);
+  return ParticipantRepo.getParticipantsBySession(sessionId);
 }
 
 export async function getParticipantReport(participantId: number) {

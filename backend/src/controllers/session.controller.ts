@@ -27,21 +27,25 @@ export const getSessions = async (
 };
 
 export const getSessionReport = async (
-  req: Request, 
+  req: Request,
   res: Response
 ): Promise<void> => {
   try {
     const sessionId = parseInt(req.params.sessionId, 10);
     // 1. Validación de Entrada
     if (isNaN(sessionId)) {
-      res.status(400).json({ message: 'Invalid session ID format. Must be a number.' });
+      res
+        .status(400)
+        .json({ message: 'Invalid session ID format. Must be a number.' });
       return;
     }
 
     const report = await SessionService.getFullSessionReport(sessionId);
     // 2. Manejo de 404
     if (!report) {
-      res.status(404).json({ message: `Session with ID ${sessionId} not found.` });
+      res
+        .status(404)
+        .json({ message: `Session with ID ${sessionId} not found.` });
       return;
     }
     res.json(report);
@@ -52,38 +56,45 @@ export const getSessionReport = async (
 };
 
 export const getSessionParticipants = async (
-  req: Request, 
+  req: Request,
   res: Response
 ): Promise<void> => {
-    try {
-        const sessionId = parseInt(req.params.sessionId, 10);
-        if (isNaN(sessionId)) {
-            res.status(400).json({ message: 'Invalid session ID format. Must be a number.' });
-            return;
-        }
-
-        const participants = await SessionService.getParticipantsForSession(sessionId);
-        res.json(participants);
-    } catch (error) {
-        console.error(`[getSessionParticipants] Error:`, error);
-        res.status(500).json({ message: 'Internal server error' });
+  try {
+    const sessionId = parseInt(req.params.sessionId, 10);
+    if (isNaN(sessionId)) {
+      res
+        .status(400)
+        .json({ message: 'Invalid session ID format. Must be a number.' });
+      return;
     }
+
+    const participants =
+      await SessionService.getParticipantsForSession(sessionId);
+    res.json(participants);
+  } catch (error) {
+    console.error(`[getSessionParticipants] Error:`, error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
 };
 
 export const getParticipantReport = async (
-  req: Request, 
+  req: Request,
   res: Response
 ): Promise<void> => {
   try {
     const participantId = parseInt(req.params.participantId, 10);
     if (isNaN(participantId)) {
-      res.status(400).json({ message: 'Invalid participant ID format. Must be a number.' });
+      res
+        .status(400)
+        .json({ message: 'Invalid participant ID format. Must be a number.' });
       return;
     }
 
     const report = await SessionService.getParticipantReport(participantId);
     if (!report) {
-      res.status(404).json({ message: `Participant with ID ${participantId} not found.` });
+      res
+        .status(404)
+        .json({ message: `Participant with ID ${participantId} not found.` });
       return;
     }
     res.json(report);

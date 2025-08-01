@@ -6,7 +6,7 @@ import {
   createSession,
   getSessionByCode,
   validateSessionCode,
-  getSessionParticipants
+  getSessionParticipants,
 } from '../controllers/session.controller';
 
 const router = Router();
@@ -140,8 +140,7 @@ router.get('/code/:code', getSessionByCode);
  */
 router.get('/validate/:code', validateSessionCode);
 
-router.get('/:sessionId/participants', getSessionParticipants); 
-
+router.get('/:sessionId/participants', getSessionParticipants);
 
 /**
  * @swagger
@@ -177,6 +176,5 @@ router.get('/participant/:participantId', getParticipantReport);
  *         description: Reporte de sesión
  */
 router.get('/:sessionId', getSessionReport);
-
 
 export default router;
