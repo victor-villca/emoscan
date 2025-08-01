@@ -71,3 +71,27 @@ export interface SessionDetails {
   timeline: TimelineEntry[];
   transitions: EmotionTransition[];
 }
+
+export interface AggregatedEmotionMetric {
+  emotion_type_id: number;
+  average_percentage: string;
+}
+
+export interface ParticipantReportData {
+  participant: Participant;
+  session: Session;
+  emotionReport: {
+    id: number;
+    participant_id: number;
+    emotions: AggregatedEmotionMetric[];
+  } | null;
+  transitions: EmotionTransition[];
+}
+
+export interface Emotion {
+    id: number;
+    emotion_report_id: number;
+    emotion_type_id: number;
+    percentage: string;
+    detected_at: string;
+}
