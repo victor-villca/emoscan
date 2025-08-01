@@ -10,6 +10,7 @@ import { ParticipantReportData, AggregatedEmotionMetric } from '@/types/sessionT
 import EmotionPieChart from '@/components/session/EmotionPieChart';
 import ParticipantReportSkeleton from '@/components/session/ParticipantReportSkeleton';
 import AnalysisSummary from '@/components/session/AnalysisSummary';
+import { usePDFGenerator } from '@/hooks/usePDFGenerator';
 
 const emotionTypes: Record<number, { name: string; color: string; icon: string }> = {
     1: { name: 'Happy', color: '#34D399', icon: 'ri-emotion-happy-line' },
@@ -44,6 +45,17 @@ export default function ParticipantReport({ params }: { params: Promise<{ sessio
     fetchData();
   }, [participantId]);
 
+    const reportFileName = useMemo(() => {
+    if (!data) return 'Participant_Report';
+    const dateStr = new Date(data.session.date).toISOString().split('T')[0];
+    return `Participant_${data.participant.name.replace(' ', '_')}_Session_${data.session.id}_${dateStr}`;
+  }, [data]);
+  
+  const { isGenerating, generatePDF } = usePDFGenerator({
+    fileName: reportFileName,
+    elementId: 'participantReportContent'
+  });
+
   const processedEmotions = useMemo(() => {
     if (!data?.emotionReport?.emotions) return [];
     
@@ -71,20 +83,41 @@ export default function ParticipantReport({ params }: { params: Promise<{ sessio
   return (
     <>
       <Head><title>Emotion Report - {participant.name}</title></Head>
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
+      <div id="participantReportContent" className="container mx-auto px-4 py-8 max-w-7xl">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Emotion Analysis Report</h1>
             <p className="text-gray-600 mt-1">Session on {new Date(session.date).toLocaleDateString()}</p>
           </div>
-          <div className="flex gap-4 mt-4 md:mt-0">
-            <Link href={`/session/${sessionId}`} className="flex items-center bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition">
-              <i className="ri-arrow-left-line mr-2"></i>Back to Session
-            </Link>
-            <button className="flex items-center bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition">
-              <i className="ri-file-download-line mr-2"></i>Export PDF
-            </button>
-          </div>
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-4 md:mt-0 w-full sm:w-auto">
+              <Link 
+                href={`/session/${sessionId}`} 
+                className="flex items-center justify-center bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition"
+              >
+                <i className="ri-arrow-left-line mr-2"></i>
+                Back to Session
+              </Link>
+              <button 
+                onClick={generatePDF}
+                disabled={isGenerating}
+                className="flex items-center justify-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition disabled:bg-blue-400 transition cursor-pointer disabled:cursor-not-allowed"
+              >
+                {isGenerating ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <i className="ri-file-download-line mr-2"></i>
+                    Export PDF
+                  </>
+                )}
+              </button>
+            </div>
         </div>
 
         <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
