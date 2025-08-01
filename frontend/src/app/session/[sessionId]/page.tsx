@@ -78,13 +78,15 @@ const SessionDetailsPage = ({
 
   const reportFileName = useMemo(() => {
     if (!sessionData) return 'Session_Report';
-    const dateStr = new Date(sessionData.session.date).toISOString().split('T')[0];
+    const dateStr = new Date(sessionData.session.date)
+      .toISOString()
+      .split('T')[0];
     return `Session_${sessionData.session.name.replace(' ', '_')}_${dateStr}`;
   }, [sessionData]);
 
   const { isGenerating, generatePDF } = usePDFGenerator({
     fileName: reportFileName,
-    elementId: 'sessionReportContent'
+    elementId: 'sessionReportContent',
   });
 
   const dominantSessionEmotion = useMemo(() => {
@@ -187,7 +189,10 @@ const SessionDetailsPage = ({
         <title>{session.name} | Session Details</title>
       </Head>
       <div className="min-h-screen bg-[#F8F9FA]">
-        <main id="sessionReportContent" className="container mx-auto px-4 py-6 bg-white">
+        <main
+          id="sessionReportContent"
+          className="container mx-auto px-4 py-6 bg-white"
+        >
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
             <div>
               <Link
@@ -200,21 +205,28 @@ const SessionDetailsPage = ({
                 {session.name}
               </h1>
               <p className="text-gray-500 mt-1">
-                {formatDate(session.date)} • {formatTime(session.start_time)} - {formatTime(session.end_time)}
+                {formatDate(session.date)} • {formatTime(session.start_time)} -{' '}
+                {formatTime(session.end_time)}
               </p>
             </div>
-            <button 
-              onClick={generatePDF} 
-              disabled={isGenerating} 
+            <button
+              onClick={generatePDF}
+              disabled={isGenerating}
               className="btn-primary ont-medium items-center self-start md:self-center  bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition disabled:bg-blue-400 cursor-pointer disabled:cursor-not-allowed"
             >
-              {isGenerating ? 'Generating...' : <><i className="ri-download-line mr-2"></i>Export Report</>}
+              {isGenerating ? (
+                'Generating...'
+              ) : (
+                <>
+                  <i className="ri-download-line mr-2"></i>Export Report
+                </>
+              )}
             </button>
           </div>
 
-          <motion.div 
-            initial={{ opacity: 0, y: 10 }} 
-            animate={{ opacity: 1, y: 0 }} 
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -241,14 +253,16 @@ const SessionDetailsPage = ({
             </div>
 
             <div className="bg-white rounded-lg shadow-sm p-6 mb-6 border border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Overall Emotion Summary</h2>
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                Overall Emotion Summary
+              </h2>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 {Object.entries(emotionSummary).map(([name, percentage]) => {
                   const emotionId = apiNameToIdMap[name];
                   if (!emotionId) return null;
                   const emotion = emotionMap[emotionId];
                   return (
-                    <SummaryEmotionCard 
+                    <SummaryEmotionCard
                       key={name}
                       name={emotion.name}
                       icon={emotion.icon}
@@ -297,7 +311,8 @@ const SessionDetailsPage = ({
                         <div className="flex items-center">
                           <img
                             src={
-                              participant.face_snapshot_url || '/placeholder.png'
+                              participant.face_snapshot_url ||
+                              '/placeholder.png'
                             }
                             alt={participant.name}
                             className="w-12 h-12 rounded-full object-cover mr-4"
@@ -310,7 +325,9 @@ const SessionDetailsPage = ({
                               <div
                                 className={`text-xs font-semibold inline-flex items-center px-2 py-0.5 rounded-full ${dominantEmotion.color.replace('text-', 'bg-').replace('-500', '-100')} ${dominantEmotion.color}`}
                               >
-                                <i className={`${dominantEmotion.icon} mr-1`}></i>
+                                <i
+                                  className={`${dominantEmotion.icon} mr-1`}
+                                ></i>
                                 {dominantEmotion.name}
                               </div>
                             )}
