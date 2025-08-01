@@ -7,7 +7,10 @@ interface PDFGeneratorOptions {
   elementId: string;
 }
 
-export const usePDFGenerator = ({ fileName, elementId }: PDFGeneratorOptions) => {
+export const usePDFGenerator = ({
+  fileName,
+  elementId,
+}: PDFGeneratorOptions) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,7 +32,7 @@ export const usePDFGenerator = ({ fileName, elementId }: PDFGeneratorOptions) =>
         backgroundColor: '#ffffff',
         logging: false,
       });
-      
+
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({
         orientation: 'portrait',
@@ -56,11 +59,10 @@ export const usePDFGenerator = ({ fileName, elementId }: PDFGeneratorOptions) =>
       } else {
         pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
       }
-      
-      pdf.save(`${fileName}.pdf`);
 
+      pdf.save(`${fileName}.pdf`);
     } catch (err) {
-      console.error("Failed to generate PDF:", err);
+      console.error('Failed to generate PDF:', err);
       setError('An error occurred while generating the PDF.');
     } finally {
       setIsGenerating(false);

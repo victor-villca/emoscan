@@ -14,7 +14,7 @@ const config: Config = {
         secondary: '#6c757d',
       },
       borderRadius: {
-        'button': '8px',
+        button: '8px',
       },
     },
     colors: {

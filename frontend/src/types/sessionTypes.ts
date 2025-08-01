@@ -89,9 +89,9 @@ export interface ParticipantReportData {
 }
 
 export interface Emotion {
-    id: number;
-    emotion_report_id: number;
-    emotion_type_id: number;
-    percentage: string;
-    detected_at: string;
+  id: number;
+  emotion_report_id: number;
+  emotion_type_id: number;
+  percentage: string;
+  detected_at: string;
 }
