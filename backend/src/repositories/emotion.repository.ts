@@ -165,5 +165,7 @@ export const getAggregatedEmotionMetrics = async (reportId: number) => {
     .select(
       'emotion_type_id',
       db.raw('AVG(percentage)::numeric(5,2) as average_percentage')
-    ) as Promise<Array<{ emotion_type_id: number; average_percentage: string }>>;
+    ) as Promise<
+    Array<{ emotion_type_id: number; average_percentage: string }>
+  >;
 };
