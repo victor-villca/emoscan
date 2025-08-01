@@ -69,7 +69,8 @@ export async function processIngestion(payload: IngestPayload) {
     try {
       const participant = await getOrCreateParticipant(
         sessionId,
-        participantName
+        participantName,
+        imageBase64
       );
 
       const report = await getOrCreateEmotionReport(participant.id);

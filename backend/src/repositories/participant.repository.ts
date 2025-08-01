@@ -22,10 +22,23 @@ export async function getParticipantByName(session_id: number, name: string) {
   return db<Participant>('participants').where({ session_id, name }).first();
 }
 
-export async function getOrCreateParticipant(session_id: number, name: string) {
+export async function getOrCreateParticipant(
+  session_id: number,
+  name: string,
+  imageBase64?: string
+) {
   const existing = await getParticipantByName(session_id, name);
   if (existing) return existing;
 
-  const created = await createParticipant({ session_id, name });
+  const participantData: Omit<Participant, 'id'> = {
+    session_id,
+    name,
+  };
+
+  if (imageBase64) {
+    participantData.face_snapshot_url = imageBase64;
+  }
+
+  const created = await createParticipant(participantData);
   return created;
 }

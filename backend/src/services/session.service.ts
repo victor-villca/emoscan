@@ -81,8 +81,12 @@ export async function getParticipantReport(participantId: number) {
     return { participant, session, emotionReport: null };
   }
 
-  const aggregatedMetrics = await EmotionRepo.getAggregatedEmotionMetrics(report.id);
-  const transitions = await EmotionRepo.getEmotionTransitions(participant.session_id);
+  const aggregatedMetrics = await EmotionRepo.getAggregatedEmotionMetrics(
+    report.id
+  );
+  const transitions = await EmotionRepo.getEmotionTransitions(
+    participant.session_id
+  );
 
   return {
     participant,
@@ -91,7 +95,7 @@ export async function getParticipantReport(participantId: number) {
       ...report,
       emotions: aggregatedMetrics,
     },
-    transitions
+    transitions,
   };
 }
 
