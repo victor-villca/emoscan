@@ -4,6 +4,7 @@ export interface Session {
   code: string;
   name: string;
   date: string;
+  status?: string; 
   start_time: string;
   end_time: string;
   created_at: Date;

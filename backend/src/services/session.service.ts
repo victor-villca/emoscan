@@ -129,3 +129,8 @@ export async function validateSessionCode(code: string) {
     throw error;
   }
 }
+
+export async function finishSession(sessionId: number) {
+  await SessionRepo.updateSessionStatus(sessionId, 'completed');
+  return { message: 'Session marked as completed.' };
+}

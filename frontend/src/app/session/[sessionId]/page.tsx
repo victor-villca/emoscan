@@ -256,22 +256,32 @@ const SessionDetailsPage = ({
               <h2 className="text-xl font-semibold text-gray-800 mb-4">
                 Overall Emotion Summary
               </h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                {Object.entries(emotionSummary).map(([name, percentage]) => {
-                  const emotionId = apiNameToIdMap[name];
-                  if (!emotionId) return null;
-                  const emotion = emotionMap[emotionId];
-                  return (
-                    <SummaryEmotionCard
-                      key={name}
-                      name={emotion.name}
-                      icon={emotion.icon}
-                      percentage={parseFloat(percentage as string)}
-                      color={emotion.color}
-                    />
-                  );
-                })}
-              </div>
+              {emotionSummary ? (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                  {Object.entries(emotionSummary).map(([name, percentage]) => {
+                    const emotionId = apiNameToIdMap[name];
+                    if (!emotionId) return null;
+                    const emotion = emotionMap[emotionId];
+                    return (
+                      <SummaryEmotionCard
+                        key={name}
+                        name={emotion.name}
+                        icon={emotion.icon}
+                        percentage={parseFloat(percentage as string)}
+                        color={emotion.color}
+                      />
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-10 text-gray-500">
+                  <p>No emotion data was processed during this session.</p>
+                  <p className="text-sm mt-1">
+                    Summary will be available once participants start sharing
+                    their video.
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="bg-white rounded-lg shadow-sm p-6 mb-6 border border-gray-200">

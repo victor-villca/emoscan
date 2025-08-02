@@ -44,3 +44,7 @@ export async function getSessionById(sessionId: number) {
 export async function getSessionByCode(code: string) {
   return db<Session>('sessions').where({ code }).first();
 }
+
+export async function updateSessionStatus(sessionId: number, status: string) {
+  return db<Session>('sessions').where({ id: sessionId }).update({ status });
+}

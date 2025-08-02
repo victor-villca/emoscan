@@ -167,3 +167,21 @@ export const validateSessionCode = async (
     res.status(500).json({ error: 'Error validating session code' });
   }
 };
+
+export const handleFinishSession = async (
+  req: Request, 
+  res: Response
+): Promise<void> => {
+  try {
+    const sessionId = parseInt(req.params.sessionId, 10);
+    if (isNaN(sessionId)) {
+      res.status(400).json({ message: 'Invalid session ID.' });
+      return;
+    }
+    const result = await SessionService.finishSession(sessionId);
+    res.status(200).json(result);
+  } catch (error) {
+    console.error(`[handleFinishSession] Error:`, error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
