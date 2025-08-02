@@ -251,7 +251,7 @@ input:checked + .toggle-slider:before {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 10001; /* Mayor que el overlay principal */
+  z-index: 10001;
 }
 
 .modal-content {
