@@ -60,6 +60,11 @@ const LiveSessionPage = () => {
       });
     });
 
+    newSocket.on('session_finished', (data: { sessionId: number }) => {
+      console.log('✅ Session finished event received! Redirecting...');
+      router.push(`/session/${data.sessionId}`);
+    });
+
     newSocket.on('disconnect', () => {
       console.log('❌ WebSocket disconnected!');
     });
@@ -67,7 +72,8 @@ const LiveSessionPage = () => {
     return () => {
       newSocket.disconnect();
     };
-  }, [sessionCode]);
+  }, [sessionCode, router]);
+
 
   const handleCopyCode = async () => {
     try {

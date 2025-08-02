@@ -38,7 +38,7 @@ export const getSessionsByUser = async (user_id: number) => {
 };
 
 export async function getSessionById(sessionId: number) {
-  return db<Session>('sessions').where('id', sessionId).first().returning('*');
+  return db<Session>('sessions').where('id', sessionId).first();
 }
 
 export async function getSessionByCode(code: string) {

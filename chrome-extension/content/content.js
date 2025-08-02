@@ -177,7 +177,7 @@ function initializeUIHandlers() {
           await controller.init();
           
           statusText.textContent = 'Activa';
-          actionText.textContent = 'Detener Captura';
+          actionText.textContent = 'Stop Session';
           actionButton.disabled = false;
           
         } catch (error) {
@@ -186,20 +186,50 @@ function initializeUIHandlers() {
           actionButton.classList.remove('active');
           statusDot.classList.remove('active');
           statusText.textContent = 'Error';
-          actionText.textContent = 'Iniciar Captura';
+          actionText.textContent = 'Start Detection';
           actionButton.disabled = false;
         }
       } else {
-        statusText.textContent = 'Deteniendo...';
-        actionText.textContent = 'Deteniendo...';
+        statusText.textContent = 'Stopping...';
+        actionText.textContent = 'Stopping...';
         actionButton.disabled = true;
         
         controller.destroy();
         
         statusDot.classList.remove('active');
         statusText.textContent = 'Inactiva';
-        actionText.textContent = 'Iniciar Captura';
+        actionText.textContent = 'Start Detection';
         actionButton.disabled = false;
+        
+        try {
+            const sessionId = window.sessionData?.id;
+            if (!sessionId) {
+                throw new Error("Session ID not found in window.sessionData");
+            }
+
+            const response = await fetch(`http://localhost:4000/api/sessions/${sessionId}/finish`, {
+                method: 'POST',
+            });
+
+            if (!response.ok) {
+                throw new Error('API call to finish session failed.');
+            }
+
+            console.log('Session finished successfully via extension.');
+            controller.destroy();
+            actionButton.classList.remove('active');
+            statusDot.classList.remove('active');
+            statusText.textContent = 'Inactiva';
+            actionText.textContent = 'Start Detection';
+            
+        } catch (error) {
+            console.error('Error finishing session:', error);
+            alert("Error al finalizar la sesión. Por favor, inténtelo desde el dashboard web.");
+            statusText.textContent = 'Activa';
+            actionText.textContent = 'End Session';
+        } finally {
+            actionButton.disabled = false;
+        }
       }
     });
   }
