@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useEffect, useState, useCallback } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { io, Socket } from 'socket.io-client';
 import LiveEmotionCard from '@/components/session/LiveEmotionCard';
 
@@ -14,6 +14,7 @@ interface EmotionData {
 
 const LiveSessionPage = () => {
   const params = useParams();
+  const router = useRouter();
   const sessionCode = params.code as string;
   const [socket, setSocket] = useState<Socket | null>(null);
 
@@ -22,9 +23,26 @@ const LiveSessionPage = () => {
   );
 
   const [copySuccess, setCopySuccess] = useState(false);
+  const [isFinishing, setIsFinishing] = useState(false);
+  const [sessionData, setSessionData] = useState<{ id: number } | null>(null);
 
   useEffect(() => {
     if (!sessionCode) return;
+
+    const fetchSessionId = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/sessions/code/${sessionCode}`
+        );
+        const data = await res.json();
+        if (data.id) {
+          setSessionData(data);
+        }
+      } catch (e) {
+        console.error('Failed to fetch session ID');
+      }
+    };
+    fetchSessionId();
 
     const newSocket = io('http://localhost:4000');
     setSocket(newSocket);
@@ -58,6 +76,34 @@ const LiveSessionPage = () => {
       setTimeout(() => setCopySuccess(false), 2000);
     } catch (err) {
       console.error('Error copying to clipboard:', err);
+    }
+  };
+
+  const handleFinishSession = async () => {
+    if (!sessionData?.id) {
+      alert('Session ID not found. Cannot finish session.');
+      return;
+    }
+
+    setIsFinishing(true);
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/sessions/${sessionData.id}/finish`,
+        {
+          method: 'POST',
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to finish the session.');
+      }
+
+      router.push(`/session/${sessionData.id}`);
+    } catch (error) {
+      console.error(error);
+      alert('There was an error finishing the session. Please try again.');
+    } finally {
+      setIsFinishing(false);
     }
   };
 
@@ -97,6 +143,16 @@ const LiveSessionPage = () => {
             >
               {socket?.connected ? 'Live' : 'Disconnected'}
             </span>
+          </div>
+
+          <div className="mt-8 border-t pt-6">
+            <button
+              onClick={handleFinishSession}
+              disabled={isFinishing || !sessionData}
+              className="w-full sm:w-auto bg-red-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-red-700 transition-colors disabled:bg-red-300 disabled:cursor-not-allowed"
+            >
+              {isFinishing ? 'Finalizing...' : 'Finish Session & View Report'}
+            </button>
           </div>
         </div>
 
