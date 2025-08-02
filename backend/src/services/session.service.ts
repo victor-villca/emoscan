@@ -3,6 +3,7 @@ import * as ParticipantRepo from '../repositories/participant.repository';
 import * as EmotionRepo from '../repositories/emotion.repository';
 import { Session } from '../models/Session';
 import { differenceInMinutes } from 'date-fns';
+import { io } from '../config/socket';
 
 export const create = async (session: Omit<Session, 'id'>) =>
   SessionRepo.createSession(session);
@@ -131,6 +132,16 @@ export async function validateSessionCode(code: string) {
 }
 
 export async function finishSession(sessionId: number) {
+    const session = await SessionRepo.getSessionById(sessionId);
+  if (!session) {
+    throw new Error('Session not found');
+  }
+
   await SessionRepo.updateSessionStatus(sessionId, 'completed');
+if (io && session.code) {
+    io.to(session.code).emit('session_finished', { sessionId: session.id });
+    console.log(`📡 Emitted 'session_finished' to room: ${session.code}`);
+  }
+
   return { message: 'Session marked as completed.' };
 }
