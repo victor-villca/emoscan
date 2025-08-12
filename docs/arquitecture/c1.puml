@@ -5,7 +5,7 @@ LAYOUT_WITH_LEGEND()
 
 Person(psychologist, "Psicólogo", "Un usuario que tiene sesiones con sus pacientes")
 
-System(emocan, "EmoScan", "Aplicacion web que detecta emociones faciales en la comunicacion digital y genera reportes.")
+System(emocan, "EmoScan", "Herramienta que detecta emociones faciales en la comunicacion digital y genera reportes.")
 System_Ext(meet, "Plataforma de Videoconferencias", "Plataforma que permite a los usuarios realizar videollamadas y reuniones online")
 
 

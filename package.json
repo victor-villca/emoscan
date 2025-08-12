@@ -1,0 +1,17 @@
+{
+  "name": "emoscan",
+  "version": "1.0.0",
+  "description": "EmoScan - Sistema de análisis emocional",
+  "scripts": {
+    "dev": "chmod +x ./start-dev.sh && ./start-dev.sh",
+    "dev:start": "chmod +x ./start-dev.sh && ./start-dev.sh",
+    "dev:stop": "chmod +x ./stop-dev.sh && ./stop-dev.sh",
+    "dev:restart": "npm run dev:stop && sleep 2 && npm run dev:start",
+    "status": "chmod +x ./check-status.sh && ./check-status.sh",
+    "setup": "chmod +x ./setup-dev.sh && ./setup-dev.sh",
+    "logs": "chmod +x ./show-logs.sh && ./show-logs.sh"
+  },
+  "keywords": ["emotion", "analysis", "development"],
+  "author": "EmoScan Team",
+  "license": "MIT"
+}
