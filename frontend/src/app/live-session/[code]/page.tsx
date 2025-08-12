@@ -74,7 +74,6 @@ const LiveSessionPage = () => {
     };
   }, [sessionCode, router]);
 
-
   const handleCopyCode = async () => {
     try {
       await navigator.clipboard.writeText(String(sessionCode));

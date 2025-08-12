@@ -68,6 +68,15 @@ export default function ParticipantReport({
     elementId: 'participantReportContent',
   });
 
+  const sessionDurationInMinutes = useMemo(() => {
+    if (data?.session.actual_start_time && data?.session.actual_end_time) {
+      const start = new Date(data.session.actual_start_time);
+      const end = new Date(data.session.actual_end_time);
+      return differenceInMinutes(end, start);
+    }
+    return 0;
+  }, [data]);
+
   const processedEmotions = useMemo(() => {
     if (!data?.emotionReport?.emotions) return [];
 
@@ -100,10 +109,8 @@ export default function ParticipantReport({
     );
 
   const { participant, session, emotionReport, transitions } = data;
-  const sessionDuration = differenceInMinutes(
-    new Date(`${session.date}T${session.end_time}`),
-    new Date(`${session.date}T${session.start_time}`)
-  );
+  const sessionDurationText =
+    sessionDurationInMinutes > 0 ? `${sessionDurationInMinutes} min` : 'N/A';
 
   return (
     <>
@@ -192,7 +199,7 @@ export default function ParticipantReport({
                 <AnalysisSummary
                   participantName={participant.name}
                   emotions={emotionReport.emotions}
-                  sessionDuration={sessionDuration}
+                  sessionDuration={sessionDurationInMinutes}
                 />
               </div>
               <div className="w-full md:w-2/3 grid grid-cols-2 lg:grid-cols-3 gap-4">
@@ -252,7 +259,7 @@ export default function ParticipantReport({
                       Session Duration
                     </td>
                     <td className="text-right text-gray-800">
-                      {sessionDuration} min
+                      {sessionDurationText}
                     </td>
                   </tr>
                   <tr className="border-b">

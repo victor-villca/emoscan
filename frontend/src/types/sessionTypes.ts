@@ -7,6 +7,8 @@ export interface Session {
   end_time: string;
   created_at: string;
   status?: string;
+  actual_start_time?: string | null;
+  actual_end_time?: string | null;
 }
 
 export interface SessionListItem {
