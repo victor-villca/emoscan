@@ -9,6 +9,7 @@ import { use } from 'react';
 import StatCard from '@/components/session/StatCard';
 import EmotionTimelineChart from '@/components/session/EmotionTimelineChart';
 import SummaryEmotionCard from '@/components/session/SummaryEmotionCard';
+import { differenceInMinutes, formatDistanceToNow } from 'date-fns';
 
 const emotionMap: Record<
   number,
@@ -75,6 +76,19 @@ const SessionDetailsPage = ({
 
     fetchSessionDetails();
   }, [sessionId]);
+
+  const getDynamicDurationText = (session: SessionDetails['session']) => {
+    if (session.actual_start_time && session.actual_end_time) {
+      const start = new Date(session.actual_start_time);
+      const end = new Date(session.actual_end_time);
+      const duration = differenceInMinutes(end, start);
+      return duration < 1 ? '< 1 min' : `${duration} min`;
+    }
+    if (session.actual_start_time) {
+      return `Live for ${formatDistanceToNow(new Date(session.actual_start_time))}`;
+    }
+    return 'Not Started';
+  };
 
   const reportFileName = useMemo(() => {
     if (!sessionData) return 'Session_Report';
@@ -181,7 +195,7 @@ const SessionDetailsPage = ({
   }
 
   const { session, participants, emotionSummary, timeline } = sessionData;
-  const duration = calculateDuration(session.start_time, session.end_time);
+  const durationText = getDynamicDurationText(session);
 
   return (
     <>
@@ -238,8 +252,8 @@ const SessionDetailsPage = ({
               />
               <StatCard
                 icon="ri-time-line"
-                label="Duration"
-                value={`${duration} min`}
+                label="Analysis Duration"
+                value={`${durationText}`}
                 color="text-purple-500"
               />
               {dominantSessionEmotion && (

@@ -24,12 +24,18 @@ export async function listSessions(
   ]);
 
   const enrichedSessions = sessions.map((session: any) => {
-    const start = new Date(`${session.date}T${session.start_time}`);
-    const end = new Date(`${session.date}T${session.end_time}`);
-    const durationMinutes = differenceInMinutes(end, start);
+    let durationMinutes = 0;
+
+    if (session.actual_start_time && session.actual_end_time) {
+      const start = new Date(session.actual_start_time);
+      const end = new Date(session.actual_end_time);
+      durationMinutes = differenceInMinutes(end, start);
+    }
 
     return {
-      ...session,
+      id: session.id,
+      name: session.name,
+      date: session.date,
       participantCount: parseInt(session.participantCount, 10),
       durationMinutes,
     };
@@ -130,15 +136,17 @@ export async function validateSessionCode(code: string) {
     throw error;
   }
 }
-
 export async function finishSession(sessionId: number) {
-    const session = await SessionRepo.getSessionById(sessionId);
+  const now = new Date();
+
+  await SessionRepo.updateSessionEndTimeAndStatus(sessionId, now, 'completed');
+
+  const session = await SessionRepo.getSessionById(sessionId);
   if (!session) {
-    throw new Error('Session not found');
+    throw new Error('Session not found after finishing.');
   }
 
-  await SessionRepo.updateSessionStatus(sessionId, 'completed');
-if (io && session.code) {
+  if (io && session.code) {
     io.to(session.code).emit('session_finished', { sessionId: session.id });
     console.log(`📡 Emitted 'session_finished' to room: ${session.code}`);
   }
