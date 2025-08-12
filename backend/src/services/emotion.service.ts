@@ -9,6 +9,7 @@ import {
   recomputeSessionSummary,
   upsertEmotionSummary,
 } from '../repositories/emotion.repository';
+import * as SessionRepo from '../repositories/session.repository';
 
 dotenv.config();
 
@@ -67,6 +68,12 @@ export async function processIngestion(payload: IngestPayload) {
     console.log(`📡 Emitted emotion data to room: ${sessionCode}`);
 
     try {
+      const currentSession = await SessionRepo.getSessionById(sessionId);
+      if (currentSession && !currentSession.actual_start_time) {
+        await SessionRepo.updateSessionStartTime(sessionId, new Date());
+        console.log(`✅ Registered actual_start_time for session ${sessionId}`);
+      }
+
       const participant = await getOrCreateParticipant(
         sessionId,
         participantName,

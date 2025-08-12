@@ -169,7 +169,7 @@ export const validateSessionCode = async (
 };
 
 export const handleFinishSession = async (
-  req: Request, 
+  req: Request,
   res: Response
 ): Promise<void> => {
   try {

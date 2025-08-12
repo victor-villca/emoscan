@@ -7,7 +7,7 @@ import {
   getSessionByCode,
   validateSessionCode,
   getSessionParticipants,
-  handleFinishSession
+  handleFinishSession,
 } from '../controllers/session.controller';
 
 const router = Router();
@@ -178,6 +178,5 @@ router.get('/participant/:participantId', getParticipantReport);
  */
 router.get('/:sessionId', getSessionReport);
 router.post('/:sessionId/finish', handleFinishSession);
-
 
 export default router;

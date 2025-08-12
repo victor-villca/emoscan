@@ -15,7 +15,15 @@ export const getPaginatedSessionsByUser = async (
   return db('sessions as s')
     .leftJoin('participants as p', 's.id', 'p.session_id')
     .where('s.user_id', userId)
-    .select('s.id', 's.name', 's.date', 's.start_time', 's.end_time')
+    .select(
+      's.id',
+      's.name',
+      's.date',
+      's.start_time',
+      's.end_time',
+      's.actual_start_time',
+      's.actual_end_time'
+    )
     .count('p.id as participantCount')
     .groupBy('s.id')
     .orderBy('s.date', 'desc')
@@ -48,3 +56,26 @@ export async function getSessionByCode(code: string) {
 export async function updateSessionStatus(sessionId: number, status: string) {
   return db<Session>('sessions').where({ id: sessionId }).update({ status });
 }
+
+export const updateSessionStartTime = async (sessionId: number, time: Date) => {
+  return db('sessions')
+    .where({ id: sessionId })
+    .update({
+      actual_start_time: time,
+      start_time: time.toTimeString().split(' ')[0],
+    });
+};
+
+export const updateSessionEndTimeAndStatus = async (
+  sessionId: number,
+  time: Date,
+  status: string
+) => {
+  return db('sessions')
+    .where({ id: sessionId })
+    .update({
+      actual_end_time: time,
+      end_time: time.toTimeString().split(' ')[0],
+      status: status,
+    });
+};
