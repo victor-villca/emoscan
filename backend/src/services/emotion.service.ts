@@ -62,7 +62,7 @@ export async function processIngestion(payload: IngestPayload) {
     const dataToEmit = {
       ...fastApiResult,
       participantName: participantName,
-      timeStamp: new Date().toISOString(),
+      timestamp: new Date().toISOString(),
     };
     io.to(sessionCode).emit('new_emotion_data', dataToEmit);
     console.log(`📡 Emitted emotion data to room: ${sessionCode}`);
