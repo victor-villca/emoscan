@@ -8,6 +8,8 @@
  * @version 1.0.0
  * @author EmoScan Extension
  */
+if (typeof OverlayController === 'undefined') {
+
 class OverlayController {
   /**
  * Initialize the OverlayController with default configuration
@@ -203,6 +205,7 @@ async updateAndSendParticipantStatus(currentParticipants) {
       console.log("✅ Participant status update sent.", newStatusPayload);
     } catch (error) {
       console.error("Failed to send status update:", error);
+      window.dispatchEvent(new CustomEvent('backendError', { detail: { message: 'Connection lost. Status not updated.' } }));
     }
   }
 
@@ -324,6 +327,7 @@ async sendFaceToBackend(canvas, code, participantName) {
     
   } catch (error) {
     console.error("Error sending to backend:", error);
+    window.dispatchEvent(new CustomEvent('backendError', { detail: { message: 'Connection lost. Analysis paused.' } }));
     
     if (error.name === 'AbortError') {
       console.log("Request timed out");
@@ -454,7 +458,10 @@ updateFaceCounter(count) {
  */
 destroy() {
   console.log("OverlayController destroying. Stopping timer and capture.");
-  
+  const sessionTimeElement = document.getElementById('session-time');
+  if (sessionTimeElement) {
+    sessionTimeElement.textContent = '00:00:00';
+  }
   if (this.sessionTimer) {
     clearInterval(this.sessionTimer);
     this.sessionTimer = null;
@@ -468,3 +475,4 @@ destroy() {
 }
 
 window.OverlayController = OverlayController;
+}
