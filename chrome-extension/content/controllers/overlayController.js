@@ -93,53 +93,26 @@ async loadModels() {
       let currentParticipantsInCall = new Map();
       
       for (const container of participantContainers) {
-        let participantName = 'Unknown Participant';
-        
+        let participantName = null;
         try {
-          let nameElement = container.querySelector('span.notranslate');
-          
-          if (!nameElement || !nameElement.textContent.trim()) {
-            nameElement = container.querySelector('.OFfHfd span');
-          }
-          if (!nameElement || !nameElement.textContent.trim()) {
-            nameElement = container.querySelector('div[jsslot] > div');
-          }
-          if (!nameElement || !nameElement.textContent.trim()) {
-            const textElements = container.querySelectorAll('*');
-            for (const el of textElements) {
-              const text = el.textContent?.trim();
-              if (text && text.length > 2 && text.length < 50 && 
-                  !text.includes('http') && !text.includes('More options') &&
-                  !text.includes('Backgrounds') && !text.includes('Reframe')) {
-                nameElement = el;
-                break;
-              }
-            }
-          }
-          
-          if (nameElement && nameElement.textContent) {
+            const nameElement = container.querySelector('.OFfHfd .notranslate'); 
+            if (nameElement && nameElement.textContent) {
             participantName = nameElement.textContent.trim();
-          } else {
-            const participantId = container.getAttribute('data-participant-id');
-            if (participantId) {
-              const idParts = participantId.split('/');
-              participantName = `Participant_${idParts[idParts.length - 1].substring(0, 8)}`;
-            }
           }
         } catch (e) {
           console.warn("Could not extract participant name, falling back to default:", e);
         }
+
+        if (!participantName) continue;
         
-        const videoElement = container.querySelector('video');
+        const videoElement = container.querySelector('video:not([style*="display: none"])');
         const hasVideo = videoElement && 
-                         videoElement.readyState >= 2 && 
-                         videoElement.videoWidth > 100 && 
-                         videoElement.videoHeight > 100 && 
-                         !videoElement.paused && 
-                         videoElement.style.display !== 'none' && 
-                         videoElement.offsetWidth > 0 && 
-                         videoElement.offsetHeight > 0;
-        
+                        videoElement.readyState >= 2 && 
+                        videoElement.videoWidth > 0 &&
+                        videoElement.videoHeight > 0 &&
+                        !videoElement.paused &&
+                        videoElement.offsetWidth > 0;
+      
         currentParticipantsInCall.set(participantName, {
           status: hasVideo ? 'active_with_video' : 'active_no_video',
           videoElement: hasVideo ? videoElement : null,
@@ -147,11 +120,11 @@ async loadModels() {
       }
       
       this.knownParticipants.forEach((data, name) => {
-        if (!currentParticipantsInCall.has(name) && data.status !== 'left') {
-          currentParticipantsInCall.set(name, { status: 'left', videoElement: null });
-        }
+          if (!currentParticipantsInCall.has(name) && data.status !== 'left') {
+              currentParticipantsInCall.set(name, { status: 'left', videoElement: null });
+          }
       });
-      
+
       await this.updateAndSendParticipantStatus(currentParticipantsInCall);
       
       const activeVideoCount = Array.from(currentParticipantsInCall.values())
@@ -175,7 +148,7 @@ async loadModels() {
           ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
           
           const detection = await faceapi.detectSingleFace(
-            canvas, 
+            canvas,  
             new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 })
           );
 
@@ -200,58 +173,36 @@ async loadModels() {
     }, 2500);
   }
 
-async updateAndSendParticipantStatus(currentParticipants) {
-    const newStatusPayload = Array.from(currentParticipants.entries())
-      .map(([name, data]) => ({ 
-        name, 
-        status: data.status 
-      }));
-    
-    let hasChanged = false;
-    
-    if (currentParticipants.size !== this.knownParticipants.size) {
-      hasChanged = true;
-    } else {
-      for (const [name, data] of currentParticipants.entries()) {
-        if (!this.knownParticipants.has(name) || 
-            this.knownParticipants.get(name).status !== data.status) {
-          hasChanged = true;
-          break;
-        }
-      }
-    }
 
-    if (!hasChanged) return;
+  /**
+ * Updates and sends participant status changes to the backend server
+ * Only sends updates when there are actual changes in participant states
+ * 
+ * @method updateAndSendParticipantStatus
+ * @param {Map} currentParticipants - Map of current participants with their status and video elements
+ *                                   Key: participant name, Value: {status: string, videoElement: HTMLVideoElement|null}
+ * @returns {Promise<void>} Resolves when status update is sent or skipped
+ */
+async updateAndSendParticipantStatus(currentParticipants) {
+    const newStatusPayload = Array.from(currentParticipants.entries()).map(([name, data]) => ({ name, status: data.status }));
+    const oldStatusPayload = Array.from(this.knownParticipants.entries()).map(([name, data]) => ({ name, status: data.status }));
+    if (JSON.stringify(newStatusPayload.sort((a, b) => a.name.localeCompare(b.name))) === JSON.stringify(oldStatusPayload.sort((a, b) => a.name.localeCompare(b.name)))) {
+        return;
+    }
     
     this.knownParticipants = currentParticipants;
-
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
-      
-      const response = await fetch('http://localhost:4000/api/sessions/status', {
+      await fetch('http://localhost:4000/api/sessions/status', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           sessionCode: window.sessionCode,
           participants: newStatusPayload,
         }),
-        signal: controller.signal
       });
-      
-      clearTimeout(timeoutId);
-      
-      if (response.ok) {
-        console.log("✅ Participant status update sent:", newStatusPayload);
-      } else {
-        console.error("Status update failed:", response.status);
-      }
+      console.log("✅ Participant status update sent.", newStatusPayload);
     } catch (error) {
-      if (error.name === 'AbortError') {
-        console.error("Status update timed out");
-      } else {
-        console.error("Failed to send status update:", error);
-      }
+      console.error("Failed to send status update:", error);
     }
   }
 

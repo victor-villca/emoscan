@@ -56,7 +56,7 @@ const LiveEmotionCard = ({ data }: LiveEmotionCardProps) => {
       </div>
     );
   }
-  
+
   if (data.status === 'active_with_video' && !data.lastEmotion) {
     return (
       <div className="bg-white rounded-xl shadow-lg p-6 text-center animate-pulse">
@@ -67,10 +67,11 @@ const LiveEmotionCard = ({ data }: LiveEmotionCardProps) => {
     );
   }
   const { primary_emotion, primary_confidence, timestamp } = data.lastEmotion!;
-  const emoji = emotionToEmoji[primary_emotion.toLowerCase()] || emotionToEmoji.default;
-  const color = emotionToColor[primary_emotion.toLowerCase()] || emotionToColor.default;
+  const emoji =
+    emotionToEmoji[primary_emotion.toLowerCase()] || emotionToEmoji.default;
+  const color =
+    emotionToColor[primary_emotion.toLowerCase()] || emotionToColor.default;
   const confidencePercent = Math.round(primary_confidence * 100);
-
 
   return (
     <div className="bg-white rounded-xl shadow-lg p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-l-4 border-green-500">
@@ -89,11 +90,18 @@ const LiveEmotionCard = ({ data }: LiveEmotionCardProps) => {
       </div>
       <div>
         <div className="flex justify-between items-baseline mb-1">
-          <span className="font-semibold text-xl capitalize text-gray-700">{primary_emotion}</span>
-          <span className="font-mono text-lg text-gray-600">{confidencePercent}%</span>
+          <span className="font-semibold text-xl capitalize text-gray-700">
+            {primary_emotion}
+          </span>
+          <span className="font-mono text-lg text-gray-600">
+            {confidencePercent}%
+          </span>
         </div>
         <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
-          <div className={`${color} h-4 rounded-full`} style={{ width: `${confidencePercent}%` }}></div>
+          <div
+            className={`${color} h-4 rounded-full`}
+            style={{ width: `${confidencePercent}%` }}
+          ></div>
         </div>
       </div>
     </div>

@@ -24,7 +24,9 @@ const LiveSessionPage = () => {
   const sessionCode = params.code as string;
   const [socket, setSocket] = useState<Socket | null>(null);
 
-  const [participants, setParticipants] = useState<Map<string, ParticipantState>>(new Map());
+  const [participants, setParticipants] = useState<
+    Map<string, ParticipantState>
+  >(new Map());
 
   const [copySuccess, setCopySuccess] = useState(false);
   const [isFinishing, setIsFinishing] = useState(false);
@@ -56,9 +58,11 @@ const LiveSessionPage = () => {
     });
 
     newSocket.on('new_emotion_data', (data: EmotionData) => {
-      setParticipants(prevMap => {
+      setParticipants((prevMap) => {
         const newMap = new Map(prevMap);
-        const existing = newMap.get(data.participantName) || { name: data.participantName };
+        const existing = newMap.get(data.participantName) || {
+          name: data.participantName,
+        };
         newMap.set(data.participantName, {
           ...existing,
           status: 'active_with_video',
@@ -68,20 +72,27 @@ const LiveSessionPage = () => {
       });
     });
 
-        newSocket.on('participant_status_update', (statusList: Array<{name: string, status: ParticipantState['status']}>) => {
-      setParticipants(prevMap => {
-        const newMap = new Map(prevMap);
-        for (const p of statusList) {
-          const existing = newMap.get(p.name) || { name: p.name };
-          newMap.set(p.name, { 
-            ...existing,
-            status: p.status 
-          });
-        }
-        return newMap;
-      });
-    });
+    newSocket.on(
+      'participant_status_update',
+      (
+        statusList: Array<{ name: string; status: ParticipantState['status'] }>
+      ) => {
+        console.log('👥 Status update received, rebuilding state:', statusList);
+        setParticipants((prevMap) => {
+          const newMap = new Map<string, ParticipantState>();
 
+          for (const p of statusList) {
+            const oldData = prevMap.get(p.name);
+            newMap.set(p.name, {
+              name: p.name,
+              status: p.status,
+              lastEmotion: oldData?.lastEmotion,
+            });
+          }
+          return newMap;
+        });
+      }
+    );
 
     newSocket.on('session_finished', (data: { sessionId: number }) => {
       console.log('✅ Session finished event received! Redirecting...');

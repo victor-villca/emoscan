@@ -5,7 +5,9 @@ export const handleStatusUpdate = (req: Request, res: Response): void => {
   const { sessionCode, participants } = req.body;
 
   if (!sessionCode || !Array.isArray(participants)) {
-    res.status(400).json({ message: 'Missing sessionCode or participants array.' });
+    res
+      .status(400)
+      .json({ message: 'Missing sessionCode or participants array.' });
     return;
   }
 
