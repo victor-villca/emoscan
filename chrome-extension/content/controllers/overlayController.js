@@ -19,13 +19,14 @@ constructor() {
   this.isActive = false;
   this.sessionStartTime = null;
   this.sessionTimer = null;
-  this.faceDetectionInterval = null;
+  this.analysisInterval = null;
   this.isCapturing = false;
   this.lastSend = 0;
   this.faceCount = 0;
   this.SEND_INTERVAL = 3000;
   this.FACE_SIZE = 48;
   this.IMAGE_QUALITY = 0.8;
+  this.knownParticipants = new Map();
 }
 
 /**
@@ -42,7 +43,7 @@ async init() {
     this.attachEventListeners();
     this.isActive = true;
     await this.loadModels();
-    this.startIndividualFaceDetection();
+    this.startIndividualParticipantAnalysis();
     console.log("OverlayController initialized. Session timer started.");
   } catch (error) {
     console.error("Error initializing OverlayController:", error);
@@ -72,113 +73,138 @@ async loadModels() {
  * Start the individual face detection through Meet structure
  * 
  * @async
- * @method startIndividualFaceDetection
- * @returns {Promise<void>} Promise that resolves when screen capture starts
+ * @method startIndividualParticipantAnalysis
+ * @returns {Promise<void>} Promise that resolves when detecting the emotions
  * @throws {Error} Throws error if screen capture fails to start
  */
-startIndividualFaceDetection() {
-  if (!window.sessionCode) {
-    console.error("No session code available");
-    return;
-  }
-  
-  this.isCapturing = true;
-  const lastSent = new Map();
-
-  this.faceDetectionInterval = setInterval(async () => {
-    if (!this.isCapturing) return;
-
-    const videoElements = Array.from(document.querySelectorAll('video')).filter(v => {
-      return v.readyState >= 2 &&
-              v.videoWidth > 100 &&
-              v.videoHeight > 100 &&
-              !v.paused &&
-              v.style.display !== 'none' &&
-              v.offsetWidth > 0 &&
-              v.offsetHeight > 0;
-    });
+ startIndividualParticipantAnalysis() {
+    if (!window.sessionCode) {
+      console.error("No session code available");
+      return;
+    }
     
-    if (videoElements.length === 0) return;
-    
-    this.updateFaceCounter(videoElements.length);
+    this.isCapturing = true;
+    const lastSentTimestamps = new Map();
 
-    for (const videoEl of videoElements) {
-      let participantName = 'Unknown Participant';
-      try {
-        const container = videoEl.closest('div[data-participant-id]');
-        if (container) {
-          let nameElement = null;
-          nameElement = container.querySelector('span.notranslate');
-          if (!nameElement || !nameElement.textContent.trim()) {
-            nameElement = container.querySelector('.OFfHfd span');
-          }
-          if (!nameElement || !nameElement.textContent.trim()) {
-            nameElement = container.querySelector('div[jsslot] > div');
-          }
-          if (!nameElement || !nameElement.textContent.trim()) {
-            const textElements = container.querySelectorAll('*');
-            for (const el of textElements) {
-              const text = el.textContent?.trim();
-              if (text && text.length > 2 && text.length < 50 && 
-                  !text.includes('http') && !text.includes('More options') &&
-                  !text.includes('Backgrounds') && !text.includes('Reframe')) {
-                nameElement = el;
-                break;
-              }
-            }
-          }
-          
-          if (nameElement && nameElement.textContent) {
+    this.analysisInterval = setInterval(async () => {
+      if (!this.isCapturing) return;
+
+      const participantContainers = document.querySelectorAll('div[data-participant-id]');
+      let currentParticipantsInCall = new Map();
+      
+      for (const container of participantContainers) {
+        let participantName = null;
+        try {
+            const nameElement = container.querySelector('.OFfHfd .notranslate'); 
+            if (nameElement && nameElement.textContent) {
             participantName = nameElement.textContent.trim();
           }
+        } catch (e) {
+          console.warn("Could not extract participant name, falling back to default:", e);
         }
+
+        if (!participantName) continue;
         
-        if (participantName === 'Unknown Participant' && container) {
-          const participantId = container.getAttribute('data-participant-id');
-          if (participantId) {
-            const idParts = participantId.split('/');
-            participantName = `Participant_${idParts[idParts.length - 1].substring(0, 8)}`;
-          }
-        }
-      } catch (e) {
-        console.warn("Could not extract participant name, falling back to default:", e);
+        const videoElement = container.querySelector('video:not([style*="display: none"])');
+        const hasVideo = videoElement && 
+                        videoElement.readyState >= 2 && 
+                        videoElement.videoWidth > 0 &&
+                        videoElement.videoHeight > 0 &&
+                        !videoElement.paused &&
+                        videoElement.offsetWidth > 0;
+      
+        currentParticipantsInCall.set(participantName, {
+          status: hasVideo ? 'active_with_video' : 'active_no_video',
+          videoElement: hasVideo ? videoElement : null,
+        });
       }
       
-      const now = Date.now();
-      if (now - (lastSent.get(participantName) || 0) < this.SEND_INTERVAL) {
-        continue;
-      }
-
-      try {
-        const canvas = document.createElement('canvas');
-        canvas.width = videoEl.videoWidth;
-        canvas.height = videoEl.videoHeight;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
-        
-        const detection = await faceapi.detectSingleFace(
-          canvas, 
-          new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 })
-        );
-
-        if (detection) {
-          lastSent.set(participantName, now);
-          
-          const faceCanvases = await faceapi.extractFaces(canvas, [detection]);
-          if (faceCanvases.length > 0) {
-            const aiFormattedCanvas = this.convertToAIFormat(faceCanvases[0]);
-            
-            console.log(`Processing participant: "${participantName}" (${videoEl.videoWidth}x${videoEl.videoHeight})`);
-            await this.sendFaceToBackend(aiFormattedCanvas, window.sessionCode, participantName);
+      this.knownParticipants.forEach((data, name) => {
+          if (!currentParticipantsInCall.has(name) && data.status !== 'left') {
+              currentParticipantsInCall.set(name, { status: 'left', videoElement: null });
           }
-        }
-      } catch (error) {
-        console.error(`Error processing video for participant "${participantName}":`, error);
-      }
-    }
-  }, 2000);
-}
+      });
 
+      await this.updateAndSendParticipantStatus(currentParticipantsInCall);
+      
+      const activeVideoCount = Array.from(currentParticipantsInCall.values())
+        .filter(p => p.status === 'active_with_video').length;
+      this.updateFaceCounter(activeVideoCount);
+      
+      for (const [participantName, data] of currentParticipantsInCall.entries()) {
+        if (data.status !== 'active_with_video') continue;
+        
+        const now = Date.now();
+        if (now - (lastSentTimestamps.get(participantName) || 0) < this.SEND_INTERVAL) {
+          continue;
+        }
+
+        try {
+          const videoEl = data.videoElement;
+          const canvas = document.createElement('canvas');
+          canvas.width = videoEl.videoWidth;
+          canvas.height = videoEl.videoHeight;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+          
+          const detection = await faceapi.detectSingleFace(
+            canvas,  
+            new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 })
+          );
+
+          if (detection) {
+            if (participantName !== 'Unknown Participant' && !participantName.startsWith('Participant_')) {
+              lastSentTimestamps.set(participantName, now);            
+              const faceCanvases = await faceapi.extractFaces(canvas, [detection]);
+              if (faceCanvases.length > 0) {
+                const aiFormattedCanvas = this.convertToAIFormat(faceCanvases[0]);
+                
+                console.log(`Processing participant: "${participantName}" (${videoEl.videoWidth}x${videoEl.videoHeight})`);
+                await this.sendFaceToBackend(aiFormattedCanvas, window.sessionCode, participantName);
+              }
+            } else {
+              console.log(`Skipping send for default/unidentified participant: "${participantName}"`);
+            }
+          }
+        } catch (error) {
+          console.error(`Error processing video for participant "${participantName}":`, error);
+        }
+      }
+    }, 2500);
+  }
+
+
+  /**
+ * Updates and sends participant status changes to the backend server
+ * Only sends updates when there are actual changes in participant states
+ * 
+ * @method updateAndSendParticipantStatus
+ * @param {Map} currentParticipants - Map of current participants with their status and video elements
+ *                                   Key: participant name, Value: {status: string, videoElement: HTMLVideoElement|null}
+ * @returns {Promise<void>} Resolves when status update is sent or skipped
+ */
+async updateAndSendParticipantStatus(currentParticipants) {
+    const newStatusPayload = Array.from(currentParticipants.entries()).map(([name, data]) => ({ name, status: data.status }));
+    const oldStatusPayload = Array.from(this.knownParticipants.entries()).map(([name, data]) => ({ name, status: data.status }));
+    if (JSON.stringify(newStatusPayload.sort((a, b) => a.name.localeCompare(b.name))) === JSON.stringify(oldStatusPayload.sort((a, b) => a.name.localeCompare(b.name)))) {
+        return;
+    }
+    
+    this.knownParticipants = currentParticipants;
+    try {
+      await fetch('http://localhost:4000/api/sessions/status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionCode: window.sessionCode,
+          participants: newStatusPayload,
+        }),
+      });
+      console.log("✅ Participant status update sent.", newStatusPayload);
+    } catch (error) {
+      console.error("Failed to send status update:", error);
+    }
+  }
 
   /**
  * Convert original face image to 48x48 grayscale format optimized for AI analysis
@@ -320,9 +346,9 @@ stopCapture() {
   
   this.isCapturing = false;
   this.faceCount = 0;
-  if (this.faceDetectionInterval) {
-    clearInterval(this.faceDetectionInterval);
-    this.faceDetectionInterval = null;
+  if (this.analysisInterval) {
+    clearInterval(this.analysisInterval);
+    this.analysisInterval = null;
   }
   
   console.log("Capture stopped successfully");
@@ -339,11 +365,11 @@ attachEventListeners() {
   if (autoDetection) {
     autoDetection.addEventListener('change', (e) => {
       console.log("Auto-detection toggled:", e.target.checked);
-      if (e.target.checked && !this.faceDetectionInterval && this.isCapturing) {
-        this.startIndividualFaceDetection();
-      } else if (!e.target.checked && this.faceDetectionInterval) {
-        clearInterval(this.faceDetectionInterval);
-        this.faceDetectionInterval = null;
+      if (e.target.checked && !this.analysisInterval && this.isCapturing) {
+        this.startIndividualParticipantAnalysis();
+      } else if (!e.target.checked && this.analysisInterval) {
+        clearInterval(this.analysisInterval);
+        this.analysisInterval = null;
       }
     });
   }
@@ -400,6 +426,9 @@ resetSession() {
   this.sessionStartTime = new Date();
   this.faceCount = 0;
   this.updateFaceCounter(0);
+  
+  this.knownParticipants.clear();
+  
   console.log("Session timer reset.");
 }
 
@@ -434,6 +463,7 @@ destroy() {
   this.stopCapture();
   
   this.isActive = false;
+  this.knownParticipants.clear();
 }
 }
 
