@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "EmoScan Meet Helper",
-  "version": "1.0",
+  "version": "1.0.1",
   "description": "Detección de rostros en videollamadas de Google Meet",
   "permissions": ["scripting", "activeTab", "tabs"],
   "host_permissions": ["https://meet.google.com/*"],
@@ -23,7 +23,8 @@
         "ui/*", 
         "assets/*",
         "js/face-api.min.js",
-        "js/models/*"
+        "js/models/*",
+        "content/controllers/*"
       ],
       "matches": ["https://meet.google.com/*"]
     }

@@ -3,7 +3,7 @@
         <h1 class="app-title">EmoScan</h1>
         <div class="status-indicator">
             <div id="status-dot" class="status-dot"></div>
-            <span id="status-text" class="status-text">Inactive</span>
+            <span id="status-text" class="status-text">Inactiva</span>
         </div>
         <button id="toggle-visibility" class="toggle-visibility-button">
             <span id="toggle-icon">🗙</span>
@@ -14,28 +14,31 @@
             <button id="action-button" class="action-button">
                 <span>▶</span>
             </button>
-            <p id="action-text" class="action-text">Start Detencion</p>
+            <p id="action-text" class="action-text">Iniciar Análisis</p>
         </div>
-        <div class="options-panel">
-            <div class="option-row">
-                <span class="option-text">Automatic Detection</span>
-                <label class="toggle">
-                    <input type="checkbox" id="auto-detection" checked>
-                    <span class="toggle-slider"></span>
-                </label>
-            </div>
-        </div>
+        
         <div class="stats-panel">
-            <p class="stats-label">Faces Detected</p>
-            <div id="counter" class="counter">0</div>
+            <p class="stats-label">Participantes con Video</p>
+            <div id="counter-container">
+                <div id="counter" class="counter">--</div>
+            </div>
             <div class="session-info">
-                <span>Sesión actual</span>
+                <span>Tiempo de Sesión</span>
                 <span id="session-time">00:00:00</span>
             </div>
         </div>
     </div>
     <div class="footer">
-        <span>Version: <span id="last-update">1.0.0</span></span>
-        <button id="reset-button" class="reset-button">Reset Session</button>
+        <div id="live-session-link-container" style="display: none;">
+            <a id="live-session-link" href="#" target="_blank" class="live-link">
+                Ver Sesión en Vivo <i class="ri-external-link-line"></i>
+            </a>
+        </div>
+        <span>Versión: 1.0.0</span>
+    </div>
+
+    <div id="error-banner" class="error-banner" style="display: none;">
+        <i class="ri-error-warning-line"></i>
+        <span id="error-banner-text"></span>
     </div>
 </div>

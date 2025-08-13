@@ -8,6 +8,9 @@
  * @version 1.0.0
  * @author EmoScan Extension Team
  */
+if (typeof window.emoScanInitialized === 'undefined') {
+  window.emoScanInitialized = true;
+
 
 /**
  * Initialize the overlay system by showing the session validation modal
@@ -26,9 +29,14 @@ function initializeOverlay() {
  * @returns {void}
  */
 function showSessionModal() {
+    const existingModal = document.getElementById("session-code-modal");
+    if (existingModal) {
+        existingModal.remove();
+    }
   const modalHTML = `
     <div id="session-code-modal" class="modal-overlay">
       <div class="modal-content">
+        <button id="close-modal-btn" class="close-modal-button">&times;</button>
         <h3>Ingrese el código de sesión</h3>
         <input type="text" id="session-code-input" placeholder="Código de sesión" />
         <button id="validate-session-btn">Ingresar</button>
@@ -160,76 +168,104 @@ function initializeUIHandlers() {
   const actionText = document.getElementById('action-text');
   const overlay = document.getElementById('custom-overlay');
   const resetButton = document.getElementById('reset-button');
+  const counterContainer = document.getElementById('counter-container');
+
+  const liveSessionLinkContainer = document.getElementById('live-session-link-container');
+  const liveSessionLink = document.getElementById('live-session-link');
+  if (liveSessionLink && window.sessionCode) {
+      liveSessionLink.href = `http://localhost:3000/live-session/${window.sessionCode}`;
+      liveSessionLinkContainer.style.display = 'block';
+  }
 
   controller = new OverlayController();
 
+  window.addEventListener('backendError', (event) => {
+  const errorBanner = document.getElementById('error-banner');
+  const errorBannerText = document.getElementById('error-banner-text');
+  if (errorBanner && errorBannerText) {
+    errorBannerText.textContent = event.detail.message || 'Connection error.';
+    errorBanner.style.display = 'flex';
+    setTimeout(() => {
+      errorBanner.style.display = 'none';
+    }, 5000);
+  }
+  });
+
+
   if (actionButton) {
     actionButton.addEventListener('click', async () => {
-      const isActive = actionButton.classList.toggle('active');
+      const isActive = actionButton.classList.contains('active');
 
-      if (isActive) {
-        try {
-          statusDot.classList.add('active');
-          statusText.textContent = 'Iniciando...';
-          actionText.textContent = 'Iniciando...';
-          actionButton.disabled = true;
-
-          await controller.init();
-          
-          statusText.textContent = 'Activa';
-          actionText.textContent = 'Stop Session';
-          actionButton.disabled = false;
-          
-        } catch (error) {
-          console.error('Error starting capture:', error);
-          
-          actionButton.classList.remove('active');
-          statusDot.classList.remove('active');
-          statusText.textContent = 'Error';
-          actionText.textContent = 'Start Detection';
-          actionButton.disabled = false;
-        }
-      } else {
-        statusText.textContent = 'Stopping...';
-        actionText.textContent = 'Stopping...';
+      if (!isActive) {
         actionButton.disabled = true;
+        statusDot.className = 'status-dot';
+        statusText.textContent = 'Iniciando...';
+        actionText.textContent = 'Iniciando...';
+        counterContainer.innerHTML = `
+            <div class="wave-container">
+                <div class="wave-dot"></div>
+                <div class="wave-dot"></div>
+                <div class="wave-dot"></div>
+            </div>
+            <div id="counter" class="counter" style="font-size: 24px; margin-top: 5px;">0</div>`;
         
-        controller.destroy();
-        
-        statusDot.classList.remove('active');
-        statusText.textContent = 'Inactiva';
-        actionText.textContent = 'Start Detection';
-        actionButton.disabled = false;
-        
-        try {
-            const sessionId = window.sessionData?.id;
-            if (!sessionId) {
-                throw new Error("Session ID not found in window.sessionData");
-            }
-
-            const response = await fetch(`http://localhost:4000/api/sessions/${sessionId}/finish`, {
-                method: 'POST',
-            });
-
-            if (!response.ok) {
-                throw new Error('API call to finish session failed.');
-            }
-
-            console.log('Session finished successfully via extension.');
-            controller.destroy();
-            actionButton.classList.remove('active');
-            statusDot.classList.remove('active');
-            statusText.textContent = 'Inactiva';
-            actionText.textContent = 'Start Detection';
-            
-        } catch (error) {
-            console.error('Error finishing session:', error);
-            alert("Error al finalizar la sesión. Por favor, inténtelo desde el dashboard web.");
+        setTimeout(async () => {
+          try {
+            await controller.init();
+            actionButton.classList.add('active');
+            statusDot.className = 'status-dot active';
             statusText.textContent = 'Activa';
-            actionText.textContent = 'End Session';
-        } finally {
+            actionText.textContent = 'Finalizar Sesión';
+          } catch (error) {
+            statusDot.className = 'status-dot';
+            statusText.textContent = 'Error';
+            actionText.textContent = 'Iniciar Análisis';
+            counterContainer.innerHTML = '<div id="counter" class="counter">--</div>';
+          } finally {
             actionButton.disabled = false;
-        }
+          }
+        }, 1000);
+      } else {
+        actionButton.disabled = true;
+        statusText.textContent = 'Finalizando...';
+        actionText.textContent = 'Finalizando...';
+        statusDot.className = 'status-dot finishing';
+        setTimeout(async () => {
+          try {
+              const sessionId = window.sessionData?.id;
+              if (!sessionId) {
+                  throw new Error("Session ID not found in window.sessionData");
+              }
+
+              const response = await fetch(`http://localhost:4000/api/sessions/${sessionId}/finish`, {
+                  method: 'POST',
+              });
+
+              if (!response.ok) {
+                  throw new Error('API call to finish session failed.');
+              }
+
+              console.log('Session finished successfully via extension.');
+              controller.destroy();
+              actionButton.classList.remove('active');
+              statusDot.className = 'status-dot';
+              statusText.textContent = 'Inactiva';
+              actionText.textContent = 'Iniciar Análisis';
+              const counterContainer = document.getElementById('counter-container');
+              if (counterContainer) {
+                  counterContainer.innerHTML = '<div id="counter" class="counter">--</div>';
+              }
+              
+          } catch (error) {
+              console.error('Error finishing session:', error);
+              alert("Error al finalizar la sesión. Por favor, inténtelo desde el dashboard web.");
+              statusDot.className = 'status-dot active';
+              statusText.textContent = 'Activa';
+              actionText.textContent = 'Finalizar Sesión';
+          } finally {
+              actionButton.disabled = false;
+          }
+        }, 1000);
       }
     });
   }
@@ -335,11 +371,31 @@ function setupSessionValidation() {
   const input = document.getElementById("session-code-input");
   const button = document.getElementById("validate-session-btn");
   const errorText = document.getElementById("session-error");
+  const closeModalBtn = document.getElementById("close-modal-btn");
   
   if (!modal || !input || !button || !errorText) {
     console.error('Modal elements not found');
     return;
   }
+
+const closeModal = () => {
+    if (modal) {
+      modal.remove();
+    }
+    document.removeEventListener('keydown', handleEscKey);
+  };
+
+  const handleEscKey = (event) => {
+    if (event.key === 'Escape') {
+      closeModal();
+    }
+  };
+
+  if (closeModalBtn) {
+    closeModalBtn.addEventListener("click", closeModal);
+  }
+    document.addEventListener('keydown', handleEscKey);
+
 
   input.addEventListener("keypress", (e) => {
     if (e.key === 'Enter') {
@@ -385,7 +441,7 @@ function setupSessionValidation() {
         window.sessionData = data.session;
         window.participantName = "anonymous";
         
-        modal.remove();
+        closeModal();
         
         const overlay = createOverlay();
         loadOverlayContent(overlay);
@@ -435,4 +491,5 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initializeOverlay);
 } else {
   initializeOverlay();
+}
 }
