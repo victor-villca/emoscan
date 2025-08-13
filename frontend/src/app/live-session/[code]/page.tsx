@@ -12,15 +12,19 @@ interface EmotionData {
   timestamp: string;
 }
 
+interface ParticipantState {
+  name: string;
+  status: 'active_with_video' | 'active_no_video' | 'left';
+  lastEmotion?: EmotionData;
+}
+
 const LiveSessionPage = () => {
   const params = useParams();
   const router = useRouter();
   const sessionCode = params.code as string;
   const [socket, setSocket] = useState<Socket | null>(null);
 
-  const [participants, setParticipants] = useState<Map<string, EmotionData>>(
-    new Map()
-  );
+  const [participants, setParticipants] = useState<Map<string, ParticipantState>>(new Map());
 
   const [copySuccess, setCopySuccess] = useState(false);
   const [isFinishing, setIsFinishing] = useState(false);
@@ -52,13 +56,32 @@ const LiveSessionPage = () => {
     });
 
     newSocket.on('new_emotion_data', (data: EmotionData) => {
-      console.log('🔥 New emotion data received for:', data.participantName);
-      setParticipants((prevMap) => {
+      setParticipants(prevMap => {
         const newMap = new Map(prevMap);
-        newMap.set(data.participantName, data);
+        const existing = newMap.get(data.participantName) || { name: data.participantName };
+        newMap.set(data.participantName, {
+          ...existing,
+          status: 'active_with_video',
+          lastEmotion: data,
+        });
         return newMap;
       });
     });
+
+        newSocket.on('participant_status_update', (statusList: Array<{name: string, status: ParticipantState['status']}>) => {
+      setParticipants(prevMap => {
+        const newMap = new Map(prevMap);
+        for (const p of statusList) {
+          const existing = newMap.get(p.name) || { name: p.name };
+          newMap.set(p.name, { 
+            ...existing,
+            status: p.status 
+          });
+        }
+        return newMap;
+      });
+    });
+
 
     newSocket.on('session_finished', (data: { sessionId: number }) => {
       console.log('✅ Session finished event received! Redirecting...');
@@ -175,7 +198,7 @@ const LiveSessionPage = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {participantArray.map((data) => (
-                <LiveEmotionCard key={data.participantName} data={data} />
+                <LiveEmotionCard key={data.name} data={data} />
               ))}
             </div>
           )}
