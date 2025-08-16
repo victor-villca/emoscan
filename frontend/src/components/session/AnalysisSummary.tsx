@@ -1,61 +1,60 @@
+'use client';
 import { useMemo } from 'react';
 import { AggregatedEmotionMetric } from '@/types/sessionTypes';
 
-const emotionTypes: Record<number, { name: string; color: string }> = {
-  1: { name: 'Happy', color: '#34D399' },
-  2: { name: 'Sadness', color: '#60A5FA' },
-  3: { name: 'Neutral', color: '#9CA3AF' },
-  4: { name: 'Angry', color: '#F87171' },
-  5: { name: 'Surprise', color: '#FBBF24' },
-  6: { name: 'Fear', color: '#818CF8' },
+const emotionTypes: Record<number, { name: string; color: string; icon: string }> = {
+  1: { name: 'Happy', color: '#34D399', icon: 'ri-emotion-happy-line' },
+  2: { name: 'Sadness', color: '#60A5FA', icon: 'ri-emotion-sad-line' },
+  3: { name: 'Neutral', color: '#9CA3AF', icon: 'ri-emotion-normal-line' },
+  4: { name: 'Angry', color: '#F87171', icon: 'ri-emotion-unhappy-line' },
+  5: { name: 'Surprise', color: '#FBBF24', icon: 'ri-emotion-line' },
+  6: { name: 'Fear', color: '#818CF8', icon: 'ri-emotion-2-line' },
 };
 
 interface AnalysisSummaryProps {
   participantName: string;
   emotions: AggregatedEmotionMetric[];
-  sessionDuration: number;
 }
 
-const AnalysisSummary = ({
-  participantName,
-  emotions,
-  sessionDuration,
-}: AnalysisSummaryProps) => {
-  const summaryText = useMemo(() => {
-    if (!emotions || emotions.length === 0) {
-      return `No emotional data was processed for ${participantName} during this session.`;
+const AnalysisSummary = ({ participantName, emotions }: AnalysisSummaryProps) => {
+  
+  const topThreeEmotions = useMemo(() => {
+    if (!emotions || emotions.length === 0) return [];
+    return [...emotions]
+      .sort((a, b) => parseFloat(b.average_percentage) - parseFloat(a.average_percentage))
+      .slice(0, 3)
+      .map(e => ({ ...e, ...emotionTypes[e.emotion_type_id] }));
+  }, [emotions]);
+
+  const narrativeText = useMemo(() => {
+    if (topThreeEmotions.length === 0) return `No se procesaron suficientes datos para generar un resumen para ${participantName}.`;
+    
+    const dominant = topThreeEmotions[0];
+    let text = `El perfil emocional de <strong>${participantName}</strong> estuvo dominado principalmente por <strong>${dominant.name}</strong> (promedio de ${dominant.average_percentage}%).`;
+
+    if (topThreeEmotions.length > 1) {
+      const secondary = topThreeEmotions[1];
+      text += ` Se observó una presencia notable de <strong>${secondary.name}</strong> (${secondary.average_percentage}%).`;
     }
-
-    const sortedEmotions = [...emotions].sort(
-      (a, b) =>
-        parseFloat(b.average_percentage) - parseFloat(a.average_percentage)
-    );
-
-    const dominant = sortedEmotions[0];
-    const dominantType = emotionTypes[dominant.emotion_type_id];
-
-    let text = `Throughout the ${sessionDuration}-minute session, <strong>${participantName}</strong>'s emotional profile was primarily defined by <strong style="color: ${dominantType.color}">${dominantType.name}</strong>, accounting for <strong>${dominant.average_percentage}%</strong> of the analyzed expressions.`;
-
-    if (sortedEmotions.length > 1) {
-      const secondary = sortedEmotions[1];
-      const secondaryType = emotionTypes[secondary.emotion_type_id];
-      text += ` A notable secondary emotion was <strong style="color: ${secondaryType.color}">${secondaryType.name}</strong> at <strong>${secondary.average_percentage}%</strong>.`;
-    }
-
-    if (sortedEmotions.length > 2) {
-      text += ` Other minor emotions were also detected, contributing to a complex emotional landscape.`;
-    }
-
+    
     return text;
-  }, [participantName, emotions, sessionDuration]);
+  }, [participantName, topThreeEmotions]);
 
   return (
-    <div className="mt-6 bg-gray-50 rounded-lg p-4">
-      <h3 className="font-semibold text-gray-900 mb-2">Analysis Summary</h3>
-      <p
-        className="text-gray-700 text-sm"
-        dangerouslySetInnerHTML={{ __html: summaryText }}
-      />
+    <div className="mt-6">
+      <h3 className="font-semibold text-gray-900 mb-2">Resumen de Análisis</h3>
+      <p className="text-gray-700 text-sm mb-4" dangerouslySetInnerHTML={{ __html: narrativeText }} />
+      
+      <h4 className="font-semibold text-gray-800 text-sm mb-2">Emociones Principales:</h4>
+      <div className="space-y-2">
+        {topThreeEmotions.map(emotion => (
+          <div key={emotion.emotion_type_id} className="flex items-center">
+            <i className={`${emotion.icon} mr-2`} style={{ color: emotion.color }}></i>
+            <span className="text-sm text-gray-700 flex-grow">{emotion.name}</span>
+            <span className="text-sm font-bold text-gray-800">{emotion.average_percentage}%</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
