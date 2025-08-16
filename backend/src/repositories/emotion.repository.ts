@@ -4,6 +4,7 @@ import { EmotionMetric } from '../models/EmotionMetric';
 import { EmotionSummary } from '../models/EmotionSummary';
 import { EmotionTimeline } from '../models/EmotionTimeline';
 import { EmotionTransition } from '../models/EmotionTransition';
+import { Knex } from 'knex';
 
 export const createEmotionReport = (report: EmotionReport) => {
   return db<EmotionReport>('emotion_reports').insert(report);
@@ -66,38 +67,39 @@ export async function getEmotionTransitions(sessionId: number) {
     sessionId
   );
 }
-
 export async function upsertEmotionSummary(
   sessionId: number,
-  totals: Omit<EmotionSummary, 'id' | 'session_id'>
+  totals: Omit<EmotionSummary, 'id' | 'session_id'>,
+  trx?: Knex.Transaction // <-- Parámetro opcional
 ) {
-  const exists = await getEmotionSummary(sessionId);
+  const connection = trx || db; // Usa la transacción si existe, si no, usa db
+  
+  const exists = await connection<EmotionSummary>('emotion_summaries')
+    .where('session_id', sessionId)
+    .first();
+    
   const payload = { session_id: sessionId, ...totals };
 
   if (!exists) {
-    const [created] = await db<EmotionSummary>('emotion_summaries')
-      .insert(payload)
-      .returning('*');
-    return created;
+    return connection<EmotionSummary>('emotion_summaries').insert(payload).returning('*');
   } else {
-    const [updated] = await db<EmotionSummary>('emotion_summaries')
-      .where({ session_id: sessionId })
-      .update(payload)
-      .returning('*');
-    return updated;
+    return connection<EmotionSummary>('emotion_summaries').where({ session_id: sessionId }).update(payload).returning('*');
   }
 }
 
-export async function recomputeSessionSummary(sessionId: number) {
-  const rows = (await db('emotion_metrics as em')
+export async function recomputeSessionSummary(sessionId: number, trx?: Knex.Transaction) {
+  const connection = trx || db;
+
+  const rows = await connection('emotion_metrics as em')
     .join('emotion_reports as er', 'er.id', 'em.emotion_report_id')
     .join('participants as p', 'p.id', 'er.participant_id')
     .where('p.session_id', sessionId)
     .groupBy('em.emotion_type_id')
     .select(
       'em.emotion_type_id',
-      db.raw('AVG(em.percentage) as avg_percentage')
-    )) as Array<{ emotion_type_id: number; avg_percentage: string | number }>;
+      connection.raw('AVG(em.percentage) as avg_percentage')
+    ) as Array<{ emotion_type_id: number; avg_percentage: string | number }>;
+
 
   const totals = {
     happy: 0,

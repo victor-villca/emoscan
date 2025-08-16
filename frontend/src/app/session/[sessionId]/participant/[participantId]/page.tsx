@@ -10,9 +10,11 @@ import {
   ParticipantReportData,
   AggregatedEmotionMetric,
 } from '@/types/sessionTypes';
+import { interpretEmotions} from '@/services/interpretation.service';
 import EmotionRadarChart from '@/components/session/EmotionRadarChart';
 import ParticipantReportSkeleton from '@/components/session/ParticipantReportSkeleton';
 import AnalysisSummary from '@/components/session/AnalysisSummary';
+import AnomaliesSection from '@/components/session/AnomaliesSection';
 import { usePDFGenerator } from '@/hooks/usePDFGenerator';
 
 const emotionTypes: Record<
@@ -56,6 +58,11 @@ export default function ParticipantReport({
     };
     fetchData();
   }, [participantId]);
+
+  const interpretationResult = useMemo(() => {
+    if (!data?.emotionReport?.emotions) return null;
+    return interpretEmotions(data.emotionReport.emotions, data.participant.name);
+  }, [data]);
 
   const reportFileName = useMemo(() => {
     if (!data) return 'Participant_Report';
@@ -115,7 +122,7 @@ export default function ParticipantReport({
   return (
     <>
       <Head>
-        <title>Emotion Report - {participant.name}</title>
+        <title>Reporte - {participant.name}</title>
       </Head>
       <div
         id="participantReportContent"
@@ -177,6 +184,8 @@ export default function ParticipantReport({
           </div>
         </div>
 
+        {interpretationResult && <AnomaliesSection anomalies={interpretationResult.anomalies} />}
+
         <div className="bg-white rounded-lg shadow-sm p-6 mb-8 border border-gray-200">
           {!emotionReport || emotionReport.emotions.length === 0 ? (
             <div className="text-center py-16 text-gray-500">
@@ -202,11 +211,12 @@ export default function ParticipantReport({
                   ID de Participante: {participant.id}
                 </p>
                 
-                <AnalysisSummary
-                  participantName={participant.name}
-                  emotions={emotionReport.emotions}
-                  //sessionDuration={sessionDurationInMinutes}
-                />
+                {interpretationResult && (
+                  <AnalysisSummary
+                    narrativeSummary={interpretationResult.narrativeSummary}
+                    topEmotions={interpretationResult.enrichedEmotions}
+                  />
+                )}
               </div>
             </div>
           )}
