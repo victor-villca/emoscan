@@ -85,6 +85,7 @@ export async function processIngestion(payload: IngestPayload) {
       const primaryEmotionId = mapEmotionToId(fastApiResult.primary_emotion);
       await addTimelineEvent({
         session_id: sessionId,
+        participant_id: participant.id,
         timestamp: timestamp,
         primary_emotion_id: primaryEmotionId,
       });

@@ -1,5 +1,4 @@
 'use client';
-
 import { useState, useEffect, useMemo } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -8,24 +7,15 @@ import { differenceInMinutes } from 'date-fns';
 
 import {
   ParticipantReportData,
-  AggregatedEmotionMetric,
 } from '@/types/sessionTypes';
-import EmotionPieChart from '@/components/session/EmotionPieChart';
+import { interpretEmotions} from '@/services/interpretation.service';
+import EmotionRadarChart from '@/components/session/EmotionRadarChart';
 import ParticipantReportSkeleton from '@/components/session/ParticipantReportSkeleton';
 import AnalysisSummary from '@/components/session/AnalysisSummary';
+import AnomaliesSection from '@/components/session/AnomaliesSection';
 import { usePDFGenerator } from '@/hooks/usePDFGenerator';
-
-const emotionTypes: Record<
-  number,
-  { name: string; color: string; icon: string }
-> = {
-  1: { name: 'Happy', color: '#34D399', icon: 'ri-emotion-happy-line' },
-  2: { name: 'Sadness', color: '#60A5FA', icon: 'ri-emotion-sad-line' },
-  3: { name: 'Neutral', color: '#9CA3AF', icon: 'ri-emotion-normal-line' },
-  4: { name: 'Angry', color: '#F87171', icon: 'ri-emotion-unhappy-line' },
-  5: { name: 'Surprise', color: '#FBBF24', icon: 'ri-emotion-line' },
-  6: { name: 'Fear', color: '#818CF8', icon: 'ri-emotion-2-line' },
-};
+import EmotionBreakdownCard from '@/components/session/EmotionBreakdownCard';
+import { EMOTION_DATA } from "@/lib/constant"
 
 export default function ParticipantReport({
   params,
@@ -57,6 +47,11 @@ export default function ParticipantReport({
     fetchData();
   }, [participantId]);
 
+  const interpretationResult = useMemo(() => {
+    if (!data?.emotionReport?.emotions) return null;
+    return interpretEmotions(data.emotionReport.emotions, data.participant.name);
+  }, [data]);
+
   const reportFileName = useMemo(() => {
     if (!data) return 'Participant_Report';
     const dateStr = new Date(data.session.date).toISOString().split('T')[0];
@@ -86,7 +81,7 @@ export default function ParticipantReport({
     );
 
     return data.emotionReport.emotions.map((emotion) => {
-      const type = emotionTypes[emotion.emotion_type_id];
+      const type = EMOTION_DATA[emotion.emotion_type_id];
       const percentage = parseFloat(emotion.average_percentage);
       const minutes = Math.round((percentage / 100) * sessionDuration);
       return { ...emotion, ...type, percentage, minutes };
@@ -115,7 +110,7 @@ export default function ParticipantReport({
   return (
     <>
       <Head>
-        <title>Emotion Report - {participant.name}</title>
+        <title>Reporte - {participant.name}</title>
       </Head>
       <div
         id="participantReportContent"
@@ -177,112 +172,96 @@ export default function ParticipantReport({
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-          {!emotionReport || processedEmotions.length === 0 ? (
+        {interpretationResult && <AnomaliesSection anomalies={interpretationResult.anomalies} />}
+
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-8 border border-gray-200">
+          {!emotionReport || emotionReport.emotions.length === 0 ? (
             <div className="text-center py-16 text-gray-500">
-              No emotion data has been recorded for {participant.name}.
+              No se han registrado datos de emociones para {participant.name}.
             </div>
           ) : (
-            <div className="flex flex-col md:flex-row gap-8">
-              <div className="w-full md:w-1/3 text-center md:text-left">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-4">Huella Emocional</h3>
+                <EmotionRadarChart emotions={emotionReport.emotions} />
+              </div>
+
+              <div className="text-center lg:text-left">
                 <img
                   src={participant.face_snapshot_url || '/placeholder.png'}
                   alt={participant.name}
-                  className="w-32 h-32 rounded-full object-cover mx-auto md:mx-0 mb-4 border-4 border-white shadow-lg"
+                  className="w-32 h-32 rounded-full object-cover mx-auto lg:mx-0 mb-4 border-4 border-white shadow-lg"
                 />
                 <h2 className="text-2xl font-bold text-gray-900">
                   {participant.name}
                 </h2>
                 <p className="text-gray-500">
-                  Participant ID: {participant.id}
+                  ID de Participante: {participant.id}
                 </p>
-                <AnalysisSummary
-                  participantName={participant.name}
-                  emotions={emotionReport.emotions}
-                  sessionDuration={sessionDurationInMinutes}
-                />
-              </div>
-              <div className="w-full md:w-2/3 grid grid-cols-2 lg:grid-cols-3 gap-4">
-                {processedEmotions.map((emotion) => (
-                  <div
-                    key={emotion.emotion_type_id}
-                    className="bg-gray-50 rounded-lg p-4 text-center"
-                  >
-                    <i
-                      className={`${emotion.icon} text-4xl`}
-                      style={{ color: emotion.color }}
-                    ></i>
-                    <p className="font-bold text-lg mt-2 text-gray-800">
-                      {emotion.name}
-                    </p>
-                    <p className="text-2xl font-semibold text-gray-900">
-                      {emotion.percentage}%
-                    </p>
-                  </div>
-                ))}
+                
+                {interpretationResult && (
+                  <AnalysisSummary
+                    narrativeSummary={interpretationResult.narrativeSummary}
+                    topEmotions={interpretationResult.enrichedEmotions}
+                  />
+                )}
               </div>
             </div>
           )}
         </div>
+
         {emotionReport && (
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-8">
-            <div className="lg:col-span-3 bg-white rounded-lg shadow-sm p-6">
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                Emotion Distribution
-              </h3>
-              <EmotionPieChart emotions={emotionReport.emotions} />
+          <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">
+              Session Details
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="bg-gray-50 rounded-lg p-4">
+                <p className="text-sm font-medium text-gray-600">Participant</p>
+                <p className="text-lg font-semibold text-gray-900">{participant.name}</p>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-4">
+                <p className="text-sm font-medium text-gray-600">Session Date</p>
+                <p className="text-lg font-semibold text-gray-900">
+                  {new Date(session.date).toLocaleDateString()}
+                </p>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-4">
+                <p className="text-sm font-medium text-gray-600">Session Duration</p>
+                <p className="text-lg font-semibold text-gray-900">{sessionDurationText}</p>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-4">
+                <p className="text-sm font-medium text-gray-600">Dominant Emotion</p>
+                <p
+                  className="text-lg font-semibold"
+                  style={{ color: dominantEmotion?.color }}
+                >
+                  {dominantEmotion?.name || 'N/A'}
+                </p>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-4">
+                <p className="text-sm font-medium text-gray-600">Total Metrics</p>
+                <p className="text-lg font-semibold text-gray-900">
+                  {emotionReport.emotions.length}
+                </p>
+              </div>
             </div>
-            <div className="lg:col-span-2 bg-white rounded-lg shadow-sm p-6">
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                Session Details
-              </h3>
-              <table className="w-full text-sm">
-                <tbody>
-                  <tr className="border-b">
-                    <td className="py-3 font-medium text-gray-600">
-                      Participant
-                    </td>
-                    <td className="text-right text-gray-800">
-                      {participant.name}
-                    </td>
-                  </tr>
-                  <tr className="border-b">
-                    <td className="py-3 font-medium text-gray-600">
-                      Session Date
-                    </td>
-                    <td className="text-right text-gray-800">
-                      {new Date(session.date).toLocaleDateString()}
-                    </td>
-                  </tr>
-                  <tr className="border-b">
-                    <td className="py-3 font-medium text-gray-600">
-                      Session Duration
-                    </td>
-                    <td className="text-right text-gray-800">
-                      {sessionDurationText}
-                    </td>
-                  </tr>
-                  <tr className="border-b">
-                    <td className="py-3 font-medium text-gray-600">
-                      Dominant Emotion
-                    </td>
-                    <td
-                      className={`text-right font-semibold`}
-                      style={{ color: dominantEmotion?.color }}
-                    >
-                      {dominantEmotion?.name || 'N/A'}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="py-3 font-medium text-gray-600">
-                      Total Metrics
-                    </td>
-                    <td className="text-right text-gray-800">
-                      {emotionReport.emotions.length}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+          </div>
+        )}
+
+        {emotionReport && processedEmotions.length > 0 && (
+          <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">
+              Emotion Breakdown
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {processedEmotions.map((emotion) => (
+                <EmotionBreakdownCard
+                  key={emotion.emotion_type_id}
+                  emotionTypeId={emotion.emotion_type_id}
+                  percentage={emotion.percentage}
+                />
+              ))}
             </div>
           </div>
         )}
@@ -303,8 +282,8 @@ export default function ParticipantReport({
                 </thead>
                 <tbody className="divide-y">
                   {transitions.map((t) => {
-                    const from = emotionTypes[t.emotion_from_id];
-                    const to = emotionTypes[t.emotion_to_id];
+                    const from = EMOTION_DATA[t.emotion_from_id];
+                    const to = EMOTION_DATA[t.emotion_to_id];
                     if (!from || !to) return null;
                     return (
                       <tr key={t.id}>
