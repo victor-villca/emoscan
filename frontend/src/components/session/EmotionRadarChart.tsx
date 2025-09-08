@@ -2,17 +2,15 @@
 
 import ReactECharts from 'echarts-for-react';
 import { AggregatedEmotionMetric } from '@/types/sessionTypes';
-
-const emotionSchema = [
-  { name: 'Happy', max: 100, id: 1 },
-  { name: 'Sadness', max: 100, id: 2 },
-  { name: 'Neutral', max: 100, id: 3 },
-  { name: 'Angry', max: 100, id: 4 },
-  { name: 'Surprise', max: 100, id: 5 },
-  { name: 'Fear', max: 100, id: 6 },
-];
+import { EMOTION_DATA } from '@/lib/constant';
 
 const EmotionRadarChart = ({ emotions }: { emotions: AggregatedEmotionMetric[] }) => {
+  const emotionSchema = Object.entries(EMOTION_DATA).map(([id, data]) => ({
+    name: data.name,
+    max: 100,
+    id: parseInt(id)
+  }));
+
   const radarData = emotionSchema.map(schemaItem => {
     const emotionData = emotions.find(e => e.emotion_type_id === schemaItem.id);
     return parseFloat(emotionData?.average_percentage || '0');

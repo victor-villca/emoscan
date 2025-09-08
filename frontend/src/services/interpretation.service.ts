@@ -1,18 +1,6 @@
 import { AggregatedEmotionMetric } from '@/types/sessionTypes';
 import { CLINICAL_KNOWLEDGE, PATTERNS } from './clinicalKnowledge';
-
-const emotionIdToNameMap: Record<number, string> = {
-  1: 'happy', 2: 'sadness', 3: 'neutral', 4: 'angry', 5: 'surprise', 6: 'fear',
-};
-
-const emotionUITypes: Record<number, { name: string; icon: string }> = {
-  1: { name: 'Happy', icon: 'ri-emotion-happy-line' },
-  2: { name: 'Sadness', icon: 'ri-emotion-sad-line' },
-  3: { name: 'Neutral', icon: 'ri-emotion-normal-line' },
-  4: { name: 'Angry', icon: 'ri-emotion-unhappy-line' },
-  5: { name: 'Surprise', icon: 'ri-emotion-line' },
-  6: { name: 'Fear', icon: 'ri-emotion-2-line' },
-};
+import { EMOTION_DATA, EMOTION_ID_TO_NAME_MAP } from '@/lib/constant';
 
 export interface InterpretedEmotion {
   name: string;
@@ -38,8 +26,8 @@ export const interpretEmotions = (emotions: AggregatedEmotionMetric[], participa
 
   const enrichedEmotions = emotions.map(emotion => {
     const percentage = parseFloat(emotion.average_percentage);
-    const emotionNameKey = emotionIdToNameMap[emotion.emotion_type_id];
-    const emotionUI = emotionUITypes[emotion.emotion_type_id];
+    const emotionNameKey = EMOTION_ID_TO_NAME_MAP[emotion.emotion_type_id]; 
+    const emotionUI = EMOTION_DATA[emotion.emotion_type_id];
     const knowledge = CLINICAL_KNOWLEDGE[emotionNameKey];
 
     let intensity = { level: 'Bajo', color: 'gray', icon: 'ri-checkbox-circle-fill', interpretation: 'Presencia normal de la emoción.' };
@@ -52,7 +40,12 @@ export const interpretEmotions = (emotions: AggregatedEmotionMetric[], participa
       }
     }
     
-    return { ...emotionUI, percentage, intensity };
+    return { 
+      name: emotionUI.name, 
+      icon: emotionUI.icon, 
+      percentage, 
+      intensity 
+    };
   }).sort((a, b) => b.percentage - a.percentage);
 
   const anomalies = Object.values(PATTERNS)

@@ -55,6 +55,7 @@ export interface TimelineEntry {
   session_id: number;
   timestamp: string;
   primary_emotion_id: number;
+  participant_id: number;
 }
 
 export interface EmotionTransition {

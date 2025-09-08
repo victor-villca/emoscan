@@ -1,5 +1,4 @@
 'use client';
-
 import { useState, useEffect, useMemo } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -8,7 +7,6 @@ import { differenceInMinutes } from 'date-fns';
 
 import {
   ParticipantReportData,
-  AggregatedEmotionMetric,
 } from '@/types/sessionTypes';
 import { interpretEmotions} from '@/services/interpretation.service';
 import EmotionRadarChart from '@/components/session/EmotionRadarChart';
@@ -16,18 +14,8 @@ import ParticipantReportSkeleton from '@/components/session/ParticipantReportSke
 import AnalysisSummary from '@/components/session/AnalysisSummary';
 import AnomaliesSection from '@/components/session/AnomaliesSection';
 import { usePDFGenerator } from '@/hooks/usePDFGenerator';
-
-const emotionTypes: Record<
-  number,
-  { name: string; color: string; icon: string }
-> = {
-  1: { name: 'Happy', color: '#34D399', icon: 'ri-emotion-happy-line' },
-  2: { name: 'Sadness', color: '#60A5FA', icon: 'ri-emotion-sad-line' },
-  3: { name: 'Neutral', color: '#9CA3AF', icon: 'ri-emotion-normal-line' },
-  4: { name: 'Angry', color: '#F87171', icon: 'ri-emotion-unhappy-line' },
-  5: { name: 'Surprise', color: '#FBBF24', icon: 'ri-emotion-line' },
-  6: { name: 'Fear', color: '#818CF8', icon: 'ri-emotion-2-line' },
-};
+import EmotionBreakdownCard from '@/components/session/EmotionBreakdownCard';
+import { EMOTION_DATA } from "@/lib/constant"
 
 export default function ParticipantReport({
   params,
@@ -93,7 +81,7 @@ export default function ParticipantReport({
     );
 
     return data.emotionReport.emotions.map((emotion) => {
-      const type = emotionTypes[emotion.emotion_type_id];
+      const type = EMOTION_DATA[emotion.emotion_type_id];
       const percentage = parseFloat(emotion.average_percentage);
       const minutes = Math.round((percentage / 100) * sessionDuration);
       return { ...emotion, ...type, percentage, minutes };
@@ -266,23 +254,13 @@ export default function ParticipantReport({
             <h3 className="text-xl font-semibold text-gray-900 mb-4">
               Emotion Breakdown
             </h3>
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {processedEmotions.map((emotion) => (
-                <div
+                <EmotionBreakdownCard
                   key={emotion.emotion_type_id}
-                  className="bg-gray-50 rounded-lg p-4 text-center"
-                >
-                  <i
-                    className={`${emotion.icon} text-4xl`}
-                    style={{ color: emotion.color }}
-                  ></i>
-                  <p className="font-bold text-lg mt-2 text-gray-800">
-                    {emotion.name}
-                  </p>
-                  <p className="text-2xl font-semibold text-gray-900">
-                    {emotion.percentage}%
-                  </p>
-                </div>
+                  emotionTypeId={emotion.emotion_type_id}
+                  percentage={emotion.percentage}
+                />
               ))}
             </div>
           </div>
@@ -304,8 +282,8 @@ export default function ParticipantReport({
                 </thead>
                 <tbody className="divide-y">
                   {transitions.map((t) => {
-                    const from = emotionTypes[t.emotion_from_id];
-                    const to = emotionTypes[t.emotion_to_id];
+                    const from = EMOTION_DATA[t.emotion_from_id];
+                    const to = EMOTION_DATA[t.emotion_to_id];
                     if (!from || !to) return null;
                     return (
                       <tr key={t.id}>
