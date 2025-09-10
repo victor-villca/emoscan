@@ -5,8 +5,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
     title="EmoScan Emotion Analysis API",
-    description="Detect emotions from face images using a trained deep learning model",
-    version="1.0.0"
+    description="Detect emotions from face images using MobileNet trained model on RAF-DB dataset",
+    version="1.1.0"
 )
 
 app.add_middleware(
