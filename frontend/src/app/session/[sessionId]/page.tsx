@@ -11,6 +11,7 @@ import EmotionTimelineChart from '@/components/session/EmotionTimelineChart';
 import SummaryEmotionCard from '@/components/session/SummaryEmotionCard';
 import { differenceInMinutes, formatDistanceToNow } from 'date-fns';
 import { EMOTION_DATA, API_NAME_TO_ID_MAP } from '@/lib/constant';
+import EmotionHeatmap from '@/components/session/EmotionHeatmap';
 
 const SessionDetailsPage = ({
   params,
@@ -40,7 +41,7 @@ const SessionDetailsPage = ({
         }
 
         const data = await response.json();
-        console.log(data)
+        console.log(data);
         setSessionData(data);
         setError(null);
       } catch (err) {
@@ -81,40 +82,39 @@ const SessionDetailsPage = ({
   });
 
   const dominantSessionEmotion = useMemo(() => {
-  if (!sessionData?.emotionSummary) return null;
+    if (!sessionData?.emotionSummary) return null;
 
-  try {
-    const summary = sessionData.emotionSummary;
+    try {
+      const summary = sessionData.emotionSummary;
 
-    let maxPercentage = 0;
-    let dominantEmotionId: number | null = null;
+      let maxPercentage = 0;
+      let dominantEmotionId: number | null = null;
 
-    Object.entries(summary).forEach(([emotionName, percentage]) => {
-      const emotionId = API_NAME_TO_ID_MAP[emotionName.toLowerCase()];
-      const percentageValue = parseFloat(percentage as string);
+      Object.entries(summary).forEach(([emotionName, percentage]) => {
+        const emotionId = API_NAME_TO_ID_MAP[emotionName.toLowerCase()];
+        const percentageValue = parseFloat(percentage as string);
 
-      if (
-        emotionId &&
-        !isNaN(percentageValue) &&
-        percentageValue > maxPercentage
-      ) {
-        maxPercentage = percentageValue;
-        dominantEmotionId = emotionId;
-      }
-    });
+        if (
+          emotionId &&
+          !isNaN(percentageValue) &&
+          percentageValue > maxPercentage
+        ) {
+          maxPercentage = percentageValue;
+          dominantEmotionId = emotionId;
+        }
+      });
 
-    return dominantEmotionId ? EMOTION_DATA[dominantEmotionId] : null;
-  } catch (error) {
-    console.error('Error calculating dominant emotion:', error);
-    return null;
-  }
-}, [sessionData]);
-
+      return dominantEmotionId ? EMOTION_DATA[dominantEmotionId] : null;
+    } catch (error) {
+      console.error('Error calculating dominant emotion:', error);
+      return null;
+    }
+  }, [sessionData]);
 
   const formatDate = (dateString: string) => {
     if (!dateString) return '';
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
+    return date.toLocaleDateString('es-ES', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -126,7 +126,7 @@ const SessionDetailsPage = ({
     const [hours, minutes] = timeString.split(':');
     const date = new Date();
     date.setHours(parseInt(hours), parseInt(minutes));
-    return date.toLocaleTimeString('en-US', {
+    return date.toLocaleTimeString('es-ES', {
       hour: '2-digit',
       minute: '2-digit',
       hour12: true,
@@ -153,7 +153,7 @@ const SessionDetailsPage = ({
   }
 
   if (!sessionData) {
-    return <div className="text-center py-20">Session not found.</div>;
+    return <div className="text-center py-20">Sesion no encontrada.</div>;
   }
 
   const { session, participants, emotionSummary, timeline } = sessionData;
@@ -162,7 +162,7 @@ const SessionDetailsPage = ({
   return (
     <>
       <Head>
-        <title>{session.name} | Session Details</title>
+        <title>{session.name} | Detalles de la Sesion</title>
       </Head>
       <div className="min-h-screen bg-[#F8F9FA]">
         <main
@@ -175,7 +175,7 @@ const SessionDetailsPage = ({
                 href="/"
                 className="flex items-center text-primary font-medium mb-4 text-sm"
               >
-                <i className="ri-arrow-left-line mr-1"></i>Back to Dashboard
+                <i className="ri-arrow-left-line mr-1"></i>Volver al Panel
               </Link>
               <h1 className="text-3xl font-bold text-gray-800">
                 {session.name}
@@ -191,10 +191,11 @@ const SessionDetailsPage = ({
               className="btn-primary ont-medium items-center self-start md:self-center  bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition disabled:bg-blue-400 cursor-pointer disabled:cursor-not-allowed"
             >
               {isGenerating ? (
-                'Generating...'
+                'Generando...'
               ) : (
                 <>
-                  <i className="ri-download-line mr-2"></i>Export Report
+                  {' '}
+                  <i className="ri-download-line mr-2"></i>Exportar Reporte{' '}
                 </>
               )}
             </button>
@@ -208,20 +209,20 @@ const SessionDetailsPage = ({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               <StatCard
                 icon="ri-group-line"
-                label="Participants"
+                label="Participantes"
                 value={participants.length}
                 color="text-blue-500"
               />
               <StatCard
                 icon="ri-time-line"
-                label="Analysis Duration"
+                label="Duración del análisis"
                 value={`${durationText}`}
                 color="text-purple-500"
               />
               {dominantSessionEmotion && (
                 <StatCard
                   icon={dominantSessionEmotion.icon}
-                  label="Dominant Emotion"
+                  label="Emoción Dominante"
                   value={dominantSessionEmotion.name}
                   color={dominantSessionEmotion.color}
                 />
@@ -230,7 +231,7 @@ const SessionDetailsPage = ({
 
             <div className="bg-white rounded-lg shadow-sm p-6 mb-6 border border-gray-200">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                Overall Emotion Summary
+                Resumen General de Emociones
               </h2>
               {emotionSummary ? (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -251,10 +252,12 @@ const SessionDetailsPage = ({
                 </div>
               ) : (
                 <div className="text-center py-10 text-gray-500">
-                  <p>No emotion data was processed during this session.</p>
+                  <p>
+                    No se procesaron datos de emociones durante esta sesión.
+                  </p>
                   <p className="text-sm mt-1">
-                    Summary will be available once participants start sharing
-                    their video.
+                    El resumen estará disponible una vez que los participantes
+                    comiencen a compartir su video.
                   </p>
                 </div>
               )}
@@ -262,58 +265,75 @@ const SessionDetailsPage = ({
 
             <div className="bg-white rounded-lg shadow-sm p-6 mb-6 border border-gray-200">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                Session Emotion Timeline
+                Línea de Tiempo Emocional de la Sesión
               </h2>
               {timeline && timeline.length > 0 ? (
-                <EmotionTimelineChart timeline={timeline} participants={participants} />
+                <EmotionTimelineChart
+                  timeline={timeline}
+                  participants={participants}
+                />
               ) : (
                 <p className="text-gray-500 text-center py-10">
-                  No timeline data available for this session.
+                  No hay datos de línea de tiempo disponibles para esta sesión.
                 </p>
               )}
             </div>
 
+            {/* --- INICIO DEL NUEVO GRÁFICO --- */}
+            <div className="mb-6">
+              <EmotionHeatmap timeline={timeline} participants={participants} />
+            </div>
+            {/* --- FIN DEL NUEVO GRÁFICO --- */}
+
             <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                Participants
+                Participantes
               </h2>
               {participants.length === 0 ? (
                 <p className="text-gray-500 text-center py-10">
-                  No participants in this session.
+                  No hay participantes en esta sesión.
                 </p>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {participants.map((participant) => {
-  const dominantEmotion = EMOTION_DATA[participant.dominantEmotionId as keyof typeof EMOTION_DATA];
-  return (
-    <Link
-      href={`/session/${sessionId}/participant/${participant.id}`}
-      key={participant.id}
-      className="block card p-4 border border-gray-200 rounded-lg hover:border-primary hover:shadow-lg"
-    >
-      <div className="flex items-center">
-        <img
-          src={participant.face_snapshot_url || '/placeholder.png'}
-          alt={participant.name}
-          className="w-12 h-12 rounded-full object-cover mr-4"
-        />
-        <div className="flex-1">
-          <h3 className="font-medium text-gray-800">
-            {participant.name}
-          </h3>
-          {dominantEmotion && (
-            <div
-              className={`text-xs font-semibold inline-flex items-center px-2 py-0.5 rounded-full ${dominantEmotion.bgColor} ${dominantEmotion.textColor}`} // Usar bgColor y textColor
-            >
-              <i className={`${dominantEmotion.icon} mr-1`}></i>
-              {dominantEmotion.name}
-            </div>
-          )}
-        </div>
-      </div>
-    </Link>
-  );
-})}
+                    const dominantEmotion =
+                      EMOTION_DATA[
+                        participant.dominantEmotionId as keyof typeof EMOTION_DATA
+                      ];
+                    return (
+                      <Link
+                        href={`/session/${sessionId}/participant/${participant.id}`}
+                        key={participant.id}
+                        className="block card p-4 border border-gray-200 rounded-lg hover:border-primary hover:shadow-lg"
+                      >
+                        <div className="flex items-center">
+                          <img
+                            src={
+                              participant.face_snapshot_url ||
+                              '/placeholder.png'
+                            }
+                            alt={participant.name}
+                            className="w-12 h-12 rounded-full object-cover mr-4"
+                          />
+                          <div className="flex-1">
+                            <h3 className="font-medium text-gray-800">
+                              {participant.name}
+                            </h3>
+                            {dominantEmotion && (
+                              <div
+                                className={`text-xs font-semibold inline-flex items-center px-2 py-0.5 rounded-full ${dominantEmotion.bgColor} ${dominantEmotion.textColor}`} // Usar bgColor y textColor
+                              >
+                                <i
+                                  className={`${dominantEmotion.icon} mr-1`}
+                                ></i>
+                                {dominantEmotion.name}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })}
                 </div>
               )}
             </div>

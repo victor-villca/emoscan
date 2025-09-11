@@ -11,7 +11,11 @@
     "setup": "chmod +x ./setup-dev.sh && ./setup-dev.sh",
     "logs": "chmod +x ./show-logs.sh && ./show-logs.sh"
   },
-  "keywords": ["emotion", "analysis", "development"],
+  "keywords": [
+    "emotion",
+    "analysis",
+    "development"
+  ],
   "author": "EmoScan Team",
   "license": "MIT"
 }

@@ -12,7 +12,7 @@ export default function GoogleLoginButton({ onClick }: GoogleLoginButtonProps) {
       <div className="w-6 h-6 flex items-center justify-center mr-3">
         <i className="ri-google-fill text-xl" aria-hidden="true" />
       </div>
-      <span>Sign in with Google</span>
+      <span>Iniciar sesión con Google</span>
     </button>
   );
 }

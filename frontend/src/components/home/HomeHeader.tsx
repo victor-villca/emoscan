@@ -54,10 +54,10 @@ const DashboardHeader: FC<DashboardHeaderProps> = ({ name }) => {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">
-              Hello, Dr. {name}
+              Hola, Dr. {name}
             </h1>
             <p className="text-gray-500 mt-1">
-              {new Date().toLocaleDateString('en-US', {
+              {new Date().toLocaleDateString('es-ES', {
                 weekday: 'long',
                 year: 'numeric',
                 month: 'long',
@@ -72,7 +72,7 @@ const DashboardHeader: FC<DashboardHeaderProps> = ({ name }) => {
             <div className="w-5 h-5 flex items-center justify-center mr-2">
               <i className="ri-add-line"></i>
             </div>
-            Start New Session
+            Iniciar Nueva Sesión
           </button>
         </div>
       </div>
@@ -80,11 +80,11 @@ const DashboardHeader: FC<DashboardHeaderProps> = ({ name }) => {
         <div className="fixed inset-0 bg-white/30 backdrop-blur-sm z-50 flex items-center justify-center">
           <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">
-              Name your session
+              Nombra tu sesión
             </h2>
             <input
               type="text"
-              placeholder="Untitled Session"
+              placeholder="Sesión sin título"
               className="w-full border border-gray-300 rounded-md px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={sessionName}
               onChange={(e) => setSessionName(e.target.value)}
@@ -94,13 +94,13 @@ const DashboardHeader: FC<DashboardHeaderProps> = ({ name }) => {
                 onClick={() => setModalOpen(false)}
                 className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400"
               >
-                Cancel
+                Cancelar
               </button>
               <button
                 onClick={createNewSession}
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
               >
-                Start
+                Iniciar
               </button>
             </div>
           </div>

@@ -5,7 +5,11 @@ export async function up(knex: Knex): Promise<void> {
     // Añadimos la columna para el ID del participante
     table.integer('participant_id').unsigned();
     // Creamos la relación (foreign key) con la tabla de participantes
-    table.foreign('participant_id').references('id').inTable('participants').onDelete('CASCADE');
+    table
+      .foreign('participant_id')
+      .references('id')
+      .inTable('participants')
+      .onDelete('CASCADE');
   });
 }
 

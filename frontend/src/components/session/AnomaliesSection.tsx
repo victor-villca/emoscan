@@ -12,7 +12,9 @@ const AnomaliesSection = ({ anomalies }: { anomalies: Anomaly[] }) => {
           <i className="ri-alert-fill text-2xl text-amber-500"></i>
         </div>
         <div className="ml-4">
-          <h3 className="text-lg font-semibold text-amber-800">Puntos de Atención Clínica</h3>
+          <h3 className="text-lg font-semibold text-amber-800">
+            Puntos de Atención Clínica
+          </h3>
           <div className="mt-2 text-sm text-amber-700 space-y-2">
             {anomalies.map((anomaly, index) => (
               <div key={index}>

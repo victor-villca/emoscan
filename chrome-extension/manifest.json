@@ -20,7 +20,7 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "ui/*", 
+        "ui/*",
         "assets/*",
         "js/face-api.min.js",
         "js/models/*",

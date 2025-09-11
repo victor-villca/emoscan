@@ -33,6 +33,7 @@ const EMOTION_NAME_TO_ID: Record<string, number> = {
   angry: 4,
   surprise: 5,
   fear: 6,
+  disgust: 7,
 };
 
 function mapEmotionToId(name: string): number {

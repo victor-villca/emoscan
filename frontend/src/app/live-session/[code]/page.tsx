@@ -153,10 +153,11 @@ const LiveSessionPage = () => {
       <div className="max-w-7xl mx-auto">
         <div className="bg-white rounded-xl shadow-lg p-6 sm:p-8 text-center mb-8">
           <h1 className="text-3xl font-bold mb-4 text-gray-800">
-            Live Session
+            Sesión en vivo
           </h1>
           <p className="text-gray-600 mb-6">
-            Share this code with your participants to join the session:
+            Comparte este código con tus participantes para unirse a la
+            sesión:{' '}
           </p>
           <div className="bg-gray-100 border border-gray-200 rounded-lg p-4 flex items-center justify-between max-w-sm mx-auto">
             <span className="font-mono text-2xl text-gray-800 tracking-widest">
@@ -170,7 +171,7 @@ const LiveSessionPage = () => {
                   : 'bg-blue-500 text-white hover:bg-blue-600'
               }`}
             >
-              {copySuccess ? 'Copied!' : 'Copy'}
+              {copySuccess ? '¡Copiado!' : 'Copiar'}
             </button>
           </div>
           <div className="mt-4 flex items-center justify-center">
@@ -180,7 +181,7 @@ const LiveSessionPage = () => {
             <span
               className={`text-sm font-medium ${socket?.connected ? 'text-green-600' : 'text-red-600'}`}
             >
-              {socket?.connected ? 'Live' : 'Disconnected'}
+              {socket?.connected ? 'En vivo' : 'Desconectado'}
             </span>
           </div>
 
@@ -190,20 +191,22 @@ const LiveSessionPage = () => {
               disabled={isFinishing || !sessionData}
               className="w-full sm:w-auto bg-red-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-red-700 transition-colors disabled:bg-red-300 disabled:cursor-not-allowed"
             >
-              {isFinishing ? 'Finalizing...' : 'Finish Session & View Report'}
+              {isFinishing
+                ? 'Finalizando...'
+                : 'Finalizar sesión y ver informe'}
             </button>
           </div>
         </div>
 
         <div className="bg-white rounded-xl shadow-lg p-6 sm:p-8">
           <h2 className="text-2xl font-semibold mb-6 text-gray-800">
-            Participant Emotions
+            Emociones de los participantes{' '}
           </h2>
 
           {participantArray.length === 0 ? (
             <div className="text-center py-16">
               <p className="text-lg text-gray-500">
-                Waiting for participants to send data...
+                Esperando a que los participantes envíen datos ...{' '}
               </p>
             </div>
           ) : (
