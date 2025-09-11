@@ -4,15 +4,21 @@ import ReactECharts from 'echarts-for-react';
 import { AggregatedEmotionMetric } from '@/types/sessionTypes';
 import { EMOTION_DATA } from '@/lib/constant';
 
-const EmotionRadarChart = ({ emotions }: { emotions: AggregatedEmotionMetric[] }) => {
+const EmotionRadarChart = ({
+  emotions,
+}: {
+  emotions: AggregatedEmotionMetric[];
+}) => {
   const emotionSchema = Object.entries(EMOTION_DATA).map(([id, data]) => ({
     name: data.name,
     max: 100,
-    id: parseInt(id)
+    id: parseInt(id),
   }));
 
-  const radarData = emotionSchema.map(schemaItem => {
-    const emotionData = emotions.find(e => e.emotion_type_id === schemaItem.id);
+  const radarData = emotionSchema.map((schemaItem) => {
+    const emotionData = emotions.find(
+      (e) => e.emotion_type_id === schemaItem.id
+    );
     return parseFloat(emotionData?.average_percentage || '0');
   });
 
@@ -21,7 +27,10 @@ const EmotionRadarChart = ({ emotions }: { emotions: AggregatedEmotionMetric[] }
       trigger: 'item',
     },
     radar: {
-      indicator: emotionSchema.map(item => ({ name: item.name, max: item.max })),
+      indicator: emotionSchema.map((item) => ({
+        name: item.name,
+        max: item.max,
+      })),
       radius: '70%',
       name: {
         textStyle: {

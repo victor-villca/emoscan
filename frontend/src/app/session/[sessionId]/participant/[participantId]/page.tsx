@@ -5,17 +5,15 @@ import Link from 'next/link';
 import { use } from 'react';
 import { differenceInMinutes } from 'date-fns';
 
-import {
-  ParticipantReportData,
-} from '@/types/sessionTypes';
-import { interpretEmotions} from '@/services/interpretation.service';
+import { ParticipantReportData } from '@/types/sessionTypes';
+import { interpretEmotions } from '@/services/interpretation.service';
 import EmotionRadarChart from '@/components/session/EmotionRadarChart';
 import ParticipantReportSkeleton from '@/components/session/ParticipantReportSkeleton';
 import AnalysisSummary from '@/components/session/AnalysisSummary';
 import AnomaliesSection from '@/components/session/AnomaliesSection';
 import { usePDFGenerator } from '@/hooks/usePDFGenerator';
 import EmotionBreakdownCard from '@/components/session/EmotionBreakdownCard';
-import { EMOTION_DATA } from "@/lib/constant"
+import { EMOTION_DATA } from '@/lib/constant';
 
 export default function ParticipantReport({
   params,
@@ -49,7 +47,10 @@ export default function ParticipantReport({
 
   const interpretationResult = useMemo(() => {
     if (!data?.emotionReport?.emotions) return null;
-    return interpretEmotions(data.emotionReport.emotions, data.participant.name);
+    return interpretEmotions(
+      data.emotionReport.emotions,
+      data.participant.name
+    );
   }, [data]);
 
   const reportFileName = useMemo(() => {
@@ -73,18 +74,33 @@ export default function ParticipantReport({
   }, [data]);
 
   const processedEmotions = useMemo(() => {
-    if (!data?.emotionReport?.emotions) return [];
+    if (!data?.emotionReport) return [];
 
+    const allEmotionIds = Object.keys(EMOTION_DATA).map(Number);
+
+    const metricsFromApi = data.emotionReport.emotions || [];
     const sessionDuration = differenceInMinutes(
       new Date(`${data.session.date}T${data.session.end_time}`),
       new Date(`${data.session.date}T${data.session.start_time}`)
     );
 
-    return data.emotionReport.emotions.map((emotion) => {
-      const type = EMOTION_DATA[emotion.emotion_type_id];
-      const percentage = parseFloat(emotion.average_percentage);
+    return allEmotionIds.map((id) => {
+      const emotionInfo = EMOTION_DATA[id];
+
+      const metric = metricsFromApi.find((m) => m.emotion_type_id === id);
+
+      const percentage = parseFloat(metric?.average_percentage || '0.00');
+
       const minutes = Math.round((percentage / 100) * sessionDuration);
-      return { ...emotion, ...type, percentage, minutes };
+
+      return {
+        emotion_type_id: id,
+        name: emotionInfo.name,
+        icon: emotionInfo.icon,
+        color: emotionInfo.color,
+        percentage: percentage,
+        minutes: minutes,
+      };
     });
   }, [data]);
 
@@ -119,10 +135,10 @@ export default function ParticipantReport({
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
-              Emotion Analysis Report
+              Informe de análisis de emociones
             </h1>
             <p className="text-gray-600 mt-1">
-              Session on {new Date(session.date).toLocaleDateString()}
+              Sesion de {new Date(session.date).toLocaleDateString()}
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-4 md:mt-0 w-full sm:w-auto">
@@ -131,7 +147,7 @@ export default function ParticipantReport({
               className="flex items-center justify-center bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition"
             >
               <i className="ri-arrow-left-line mr-2"></i>
-              Back to Session
+              Volver a la sesión
             </Link>
             <button
               onClick={generatePDF}
@@ -160,19 +176,21 @@ export default function ParticipantReport({
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     ></path>
                   </svg>
-                  Generating...
+                  Generando...
                 </>
               ) : (
                 <>
                   <i className="ri-file-download-line mr-2"></i>
-                  Export PDF
+                  Exportar PDF
                 </>
               )}
             </button>
           </div>
         </div>
 
-        {interpretationResult && <AnomaliesSection anomalies={interpretationResult.anomalies} />}
+        {interpretationResult && (
+          <AnomaliesSection anomalies={interpretationResult.anomalies} />
+        )}
 
         <div className="bg-white rounded-lg shadow-sm p-6 mb-8 border border-gray-200">
           {!emotionReport || emotionReport.emotions.length === 0 ? (
@@ -182,7 +200,9 @@ export default function ParticipantReport({
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
               <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">Huella Emocional</h3>
+                <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                  Huella Emocional
+                </h3>
                 <EmotionRadarChart emotions={emotionReport.emotions} />
               </div>
 
@@ -198,7 +218,7 @@ export default function ParticipantReport({
                 <p className="text-gray-500">
                   ID de Participante: {participant.id}
                 </p>
-                
+
                 {interpretationResult && (
                   <AnalysisSummary
                     narrativeSummary={interpretationResult.narrativeSummary}
@@ -213,25 +233,37 @@ export default function ParticipantReport({
         {emotionReport && (
           <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
             <h3 className="text-xl font-semibold text-gray-900 mb-4">
-              Session Details
+              Detalles de la sesión
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <div className="bg-gray-50 rounded-lg p-4">
-                <p className="text-sm font-medium text-gray-600">Participant</p>
-                <p className="text-lg font-semibold text-gray-900">{participant.name}</p>
+                <p className="text-sm font-medium text-gray-600">
+                  Participante
+                </p>
+                <p className="text-lg font-semibold text-gray-900">
+                  {participant.name}
+                </p>
               </div>
               <div className="bg-gray-50 rounded-lg p-4">
-                <p className="text-sm font-medium text-gray-600">Session Date</p>
+                <p className="text-sm font-medium text-gray-600">
+                  Fecha de la Sesion
+                </p>
                 <p className="text-lg font-semibold text-gray-900">
                   {new Date(session.date).toLocaleDateString()}
                 </p>
               </div>
               <div className="bg-gray-50 rounded-lg p-4">
-                <p className="text-sm font-medium text-gray-600">Session Duration</p>
-                <p className="text-lg font-semibold text-gray-900">{sessionDurationText}</p>
+                <p className="text-sm font-medium text-gray-600">
+                  Duracion de la Sesion
+                </p>
+                <p className="text-lg font-semibold text-gray-900">
+                  {sessionDurationText}
+                </p>
               </div>
               <div className="bg-gray-50 rounded-lg p-4">
-                <p className="text-sm font-medium text-gray-600">Dominant Emotion</p>
+                <p className="text-sm font-medium text-gray-600">
+                  Emocion Dominante
+                </p>
                 <p
                   className="text-lg font-semibold"
                   style={{ color: dominantEmotion?.color }}
@@ -240,9 +272,9 @@ export default function ParticipantReport({
                 </p>
               </div>
               <div className="bg-gray-50 rounded-lg p-4">
-                <p className="text-sm font-medium text-gray-600">Total Metrics</p>
+                <p className="text-sm font-medium text-gray-600">Emociones</p>
                 <p className="text-lg font-semibold text-gray-900">
-                  {emotionReport.emotions.length}
+                  {Object.keys(EMOTION_DATA).length}
                 </p>
               </div>
             </div>
@@ -252,7 +284,7 @@ export default function ParticipantReport({
         {emotionReport && processedEmotions.length > 0 && (
           <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
             <h3 className="text-xl font-semibold text-gray-900 mb-4">
-              Emotion Breakdown
+              Desglose emocional
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {processedEmotions.map((emotion) => (
@@ -275,9 +307,11 @@ export default function ParticipantReport({
               <table className="min-w-full text-sm text-left">
                 <thead className="bg-gray-50 text-gray-500 uppercase">
                   <tr>
-                    <th className="px-4 py-2">Time</th>
-                    <th className="px-4 py-2">Transition</th>
-                    <th className="px-4 py-2">Duration in Previous State</th>
+                    <th className="px-4 py-2">Tiempo</th>
+                    <th className="px-4 py-2">Transicion</th>
+                    <th className="px-4 py-2">
+                      Duración en el estado anterior
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
@@ -306,7 +340,7 @@ export default function ParticipantReport({
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          {t.duration_minutes} minutes
+                          {t.duration_minutes} minutos
                         </td>
                       </tr>
                     );

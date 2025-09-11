@@ -58,8 +58,8 @@ export default function Navbar() {
       .toUpperCase() || 'U';
 
   const navLinks = [
-    { href: '/', label: 'Dashboard' },
-    { href: '/help', label: 'Help Center' },
+    { href: '/', label: 'Panel' },
+    { href: '/help', label: 'Centro de Ayuda' },
   ];
 
   return (
@@ -130,13 +130,13 @@ export default function Navbar() {
                   href="/profile"
                   className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                 >
-                  My Profile
+                  Mi Perfil
                 </Link>
                 <button
                   onClick={() => signOut({ callbackUrl: '/' })}
                   className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                 >
-                  Logout
+                  Cerrar sesión
                 </button>
               </div>
             )}
@@ -146,7 +146,7 @@ export default function Navbar() {
             href="/login"
             className="bg-gradient-to-r from-[#4A90E2] to-[#357ABD] text-white font-medium px-6 py-2 rounded-lg hover:opacity-90 transition-opacity text-sm"
           >
-            Sign In
+            Iniciar sesión
           </Link>
         )}
       </div>

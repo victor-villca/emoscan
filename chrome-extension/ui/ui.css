@@ -4,7 +4,7 @@
   background-color: white;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   display: flex;
   overflow: hidden;
   flex-direction: column;
@@ -19,9 +19,9 @@
 }
 
 .app-title {
-  font-family: 'Pacifico', cursive;
+  font-family: "Pacifico", cursive;
   font-size: 20px;
-  color: #2196F3;
+  color: #2196f3;
   margin: 0;
 }
 
@@ -40,7 +40,7 @@
 }
 
 .status-dot.active {
-  background-color: #4CAF50;
+  background-color: #4caf50;
 }
 
 .status-text {
@@ -70,7 +70,7 @@
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background-color: #2196F3;
+  background-color: #2196f3;
   color: white;
   border: none;
   display: flex;
@@ -138,7 +138,7 @@
   bottom: 0;
   background-color: #e0e0e0;
   border-radius: 20px;
-  transition: .4s;
+  transition: 0.4s;
 }
 
 .toggle-slider:before {
@@ -150,11 +150,11 @@
   bottom: 2px;
   background-color: white;
   border-radius: 50%;
-  transition: .4s;
+  transition: 0.4s;
 }
 
 input:checked + .toggle-slider {
-  background-color: #4CAF50;
+  background-color: #4caf50;
 }
 
 input:checked + .toggle-slider:before {
@@ -178,7 +178,7 @@ input:checked + .toggle-slider:before {
 .counter {
   font-size: 36px;
   font-weight: 700;
-  color: #2196F3;
+  color: #2196f3;
   margin: 0;
 }
 
@@ -204,7 +204,7 @@ input:checked + .toggle-slider:before {
 .reset-button {
   background: none;
   border: none;
-  color: #2196F3;
+  color: #2196f3;
   font-size: 12px;
   cursor: pointer;
   padding: 0;
@@ -221,7 +221,7 @@ input:checked + .toggle-slider:before {
 }
 
 .toggle-visibility-button:hover {
-  color: #2196F3;
+  color: #2196f3;
 }
 
 .restore-visibility-button {
@@ -230,7 +230,7 @@ input:checked + .toggle-slider:before {
 
 .restore-visibility-button:hover {
   transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
 .restore-visibility-button img {
@@ -266,7 +266,7 @@ input:checked + .toggle-slider:before {
 
 .modal-content h3 {
   margin: 0 0 20px 0;
-  color: #2196F3;
+  color: #2196f3;
   font-size: 18px;
   font-weight: 600;
 }
@@ -284,13 +284,13 @@ input:checked + .toggle-slider:before {
 }
 
 .modal-content input:focus {
-  border-color: #2196F3;
+  border-color: #2196f3;
 }
 
 .modal-content button:not(.close-modal-button) {
   width: 100%;
   padding: 12px;
-  background-color: #2196F3;
+  background-color: #2196f3;
   color: white;
   border: none;
   border-radius: 6px;
@@ -301,7 +301,7 @@ input:checked + .toggle-slider:before {
 }
 
 .modal-content button:not(.close-modal-button):hover {
-  background-color: #1976D2;
+  background-color: #1976d2;
 }
 
 .modal-content button:not(.close-modal-button):disabled {
@@ -345,21 +345,21 @@ input:checked + .toggle-slider:before {
 
 @keyframes pulse {
   50% {
-    opacity: .5;
+    opacity: 0.5;
   }
 }
 
 .status-dot.active {
-  background-color: #4CAF50;
+  background-color: #4caf50;
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 .status-dot.finishing {
-  background-color: #FF9800; /* Naranja */
+  background-color: #ff9800; /* Naranja */
 }
 
 .live-link {
-  color: #2196F3;
+  color: #2196f3;
   text-decoration: none;
   font-weight: 500;
   font-size: 12px;
@@ -396,19 +396,30 @@ input:checked + .toggle-slider:before {
 .wave-dot {
   width: 10px;
   height: 10px;
-  background-color: #2196F3;
+  background-color: #2196f3;
   border-radius: 50%;
   position: absolute;
   bottom: 0;
   animation: wave 1.5s infinite ease-in-out;
 }
 
-.wave-dot:nth-child(1) { left: 10px; animation-delay: 0s; }
-.wave-dot:nth-child(2) { left: 35px; animation-delay: 0.2s; }
-.wave-dot:nth-child(3) { left: 60px; animation-delay: 0.4s; }
+.wave-dot:nth-child(1) {
+  left: 10px;
+  animation-delay: 0s;
+}
+.wave-dot:nth-child(2) {
+  left: 35px;
+  animation-delay: 0.2s;
+}
+.wave-dot:nth-child(3) {
+  left: 60px;
+  animation-delay: 0.4s;
+}
 
 @keyframes wave {
-  0%, 60%, 100% {
+  0%,
+  60%,
+  100% {
     transform: translateY(0);
   }
   30% {

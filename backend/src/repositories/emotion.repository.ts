@@ -73,24 +73,32 @@ export async function upsertEmotionSummary(
   trx?: Knex.Transaction // <-- Parámetro opcional
 ) {
   const connection = trx || db; // Usa la transacción si existe, si no, usa db
-  
+
   const exists = await connection<EmotionSummary>('emotion_summaries')
     .where('session_id', sessionId)
     .first();
-    
+
   const payload = { session_id: sessionId, ...totals };
 
   if (!exists) {
-    return connection<EmotionSummary>('emotion_summaries').insert(payload).returning('*');
+    return connection<EmotionSummary>('emotion_summaries')
+      .insert(payload)
+      .returning('*');
   } else {
-    return connection<EmotionSummary>('emotion_summaries').where({ session_id: sessionId }).update(payload).returning('*');
+    return connection<EmotionSummary>('emotion_summaries')
+      .where({ session_id: sessionId })
+      .update(payload)
+      .returning('*');
   }
 }
 
-export async function recomputeSessionSummary(sessionId: number, trx?: Knex.Transaction) {
+export async function recomputeSessionSummary(
+  sessionId: number,
+  trx?: Knex.Transaction
+) {
   const connection = trx || db;
 
-  const rows = await connection('emotion_metrics as em')
+  const rows = (await connection('emotion_metrics as em')
     .join('emotion_reports as er', 'er.id', 'em.emotion_report_id')
     .join('participants as p', 'p.id', 'er.participant_id')
     .where('p.session_id', sessionId)
@@ -98,8 +106,7 @@ export async function recomputeSessionSummary(sessionId: number, trx?: Knex.Tran
     .select(
       'em.emotion_type_id',
       connection.raw('AVG(em.percentage) as avg_percentage')
-    ) as Array<{ emotion_type_id: number; avg_percentage: string | number }>;
-
+    )) as Array<{ emotion_type_id: number; avg_percentage: string | number }>;
 
   const totals = {
     happy: 0,
@@ -108,6 +115,7 @@ export async function recomputeSessionSummary(sessionId: number, trx?: Knex.Tran
     angry: 0,
     surprise: 0,
     fear: 0,
+    disgust: 0,
   };
 
   const EMOTION_ID_TO_NAME: Record<number, keyof typeof totals> = {
@@ -117,6 +125,7 @@ export async function recomputeSessionSummary(sessionId: number, trx?: Knex.Tran
     4: 'angry',
     5: 'surprise',
     6: 'fear',
+    7: 'disgust',
   };
 
   for (const row of rows) {

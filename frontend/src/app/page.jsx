@@ -78,10 +78,10 @@ const Dashboard = () => {
       <div className="min-h-screen flex items-center justify-center bg-[#F8F9FA] text-center px-4">
         <div>
           <h1 className="text-2xl font-semibold text-gray-800 mb-4">
-            Please log in to view your sessions
+            Por favor, inicia sesión para ver tus sesiones
           </h1>
           <p className="text-gray-600">
-            You must be signed in to access the dashboard.
+            Debes haber iniciado sesión para acceder al panel.
           </p>
         </div>
       </div>
