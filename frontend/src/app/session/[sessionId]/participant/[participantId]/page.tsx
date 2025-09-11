@@ -6,7 +6,10 @@ import { use } from 'react';
 import { differenceInMinutes } from 'date-fns';
 
 import { ParticipantReportData } from '@/types/sessionTypes';
-import { interpretEmotions } from '@/services/interpretation.service';
+import {
+  interpretEmotions,
+  InterpretationResult,
+} from '@/services/interpretation.service';
 import EmotionRadarChart from '@/components/session/EmotionRadarChart';
 import ParticipantReportSkeleton from '@/components/session/ParticipantReportSkeleton';
 import AnalysisSummary from '@/components/session/AnalysisSummary';
@@ -24,6 +27,7 @@ export default function ParticipantReport({
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<ParticipantReportData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [selectedEmotion, setSelectedEmotion] = useState<string | null>(null);
 
   useEffect(() => {
     if (!participantId) return;
@@ -45,7 +49,7 @@ export default function ParticipantReport({
     fetchData();
   }, [participantId]);
 
-  const interpretationResult = useMemo(() => {
+  const interpretationResult = useMemo((): InterpretationResult | null => {
     if (!data?.emotionReport?.emotions) return null;
     return interpretEmotions(
       data.emotionReport.emotions,
@@ -125,6 +129,22 @@ export default function ParticipantReport({
 
   return (
     <>
+      <div className="bg-white shadow-sm border-b border-gray-200">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <Link
+              href={`/session/${sessionId}`}
+              className="hover:text-blue-600"
+            >
+              Sesión
+            </Link>
+            <i className="ri-arrow-right-s-line"></i>
+            <span className="text-blue-600 font-medium">
+              Reporte del Participante
+            </span>
+          </div>
+        </div>
+      </div>
       <Head>
         <title>Reporte - {participant.name}</title>
       </Head>
@@ -188,42 +208,187 @@ export default function ParticipantReport({
           </div>
         </div>
 
-        {interpretationResult && (
+        {interpretationResult && interpretationResult.anomalies.length > 0 && (
           <AnomaliesSection anomalies={interpretationResult.anomalies} />
         )}
 
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-8 border border-gray-200">
+        <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden mb-8">
           {!emotionReport || emotionReport.emotions.length === 0 ? (
             <div className="text-center py-16 text-gray-500">
               No se han registrado datos de emociones para {participant.name}.
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-              <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                  Huella Emocional
-                </h3>
-                <EmotionRadarChart emotions={emotionReport.emotions} />
-              </div>
+            <div className="grid grid-cols-1 lg:grid-cols-5 min-h-[600px]">
+              <div className="lg:col-span-3 p-8 bg-gradient-to-br from-slate-50/50 to-gray-50/30 ">
+                <div className="text-center mb-8">
+                  <div className="relative inline-block mb-4">
+                    <img
+                      src={participant.face_snapshot_url || '/placeholder.png'}
+                      alt={participant.name}
+                      className="w-28 h-28 rounded-full object-cover border-4 border-white shadow-lg"
+                    />
+                    <div className="absolute -bottom-2 -right-2 bg-blue-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
+                      ID: {participant.id}
+                    </div>
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-1">
+                    {participant.name}
+                  </h2>
+                  <p className="text-sm text-gray-500 bg-gray-100 inline-block px-3 py-1 rounded-full">
+                    Participante de Sesión
+                  </p>
+                </div>
 
-              <div className="text-center lg:text-left">
-                <img
-                  src={participant.face_snapshot_url || '/placeholder.png'}
-                  alt={participant.name}
-                  className="w-32 h-32 rounded-full object-cover mx-auto lg:mx-0 mb-4 border-4 border-white shadow-lg"
-                />
-                <h2 className="text-2xl font-bold text-gray-900">
-                  {participant.name}
-                </h2>
-                <p className="text-gray-500">
-                  ID de Participante: {participant.id}
-                </p>
+                <div className="flex items-center mb-6">
+                  <div className="flex-1 h-px bg-gradient-to-r from-transparent to-gray-300"></div>
+                  <i className="ri-book-open-line text-gray-400 mx-3"></i>
+                  <div className="flex-1 h-px bg-gradient-to-l from-transparent to-gray-300"></div>
+                </div>
+
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                  <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4">
+                    <h3 className="text-white font-bold flex items-center">
+                      <i className="ri-psychology-line mr-2"></i>
+                      Análisis Emocional
+                    </h3>
+                  </div>
+
+                  {interpretationResult && (
+                    <div className="p-6">
+                      <AnalysisSummary
+                        narrativeSummary={interpretationResult.narrativeSummary}
+                        scientificSummary={
+                          interpretationResult.scientificSummary
+                        }
+                        topEmotions={interpretationResult.enrichedEmotions}
+                        anomalies={interpretationResult.anomalies}
+                        bibliography={interpretationResult.bibliography}
+                        metadata={interpretationResult.metadata}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-6 grid grid-cols-2 gap-3">
+                  <div className="bg-white rounded-lg p-3 border border-gray-200 text-center">
+                    <div className="text-xs text-gray-500 mb-1">Duración</div>
+                    <div className="font-bold text-gray-900">
+                      {sessionDurationText}
+                    </div>
+                  </div>
+                  <div className="bg-white rounded-lg p-3 border border-gray-200 text-center">
+                    <div className="text-xs text-gray-500 mb-1">Dominante</div>
+                    <div
+                      className="font-bold text-sm truncate"
+                      style={{ color: dominantEmotion?.color }}
+                    >
+                      {dominantEmotion?.name || 'N/A'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="lg:col-span-2 p-8 bg-gradient-to-br from-blue-50/30 to-indigo-50/40 border-r border-gray-100">
+                <div className="flex items-center mb-6">
+                  <div className="w-1 h-8 bg-blue-600 rounded-full mr-4"></div>
+                  <h3 className="text-2xl font-bold text-gray-900">
+                    Huella Emocional
+                  </h3>
+                </div>
+
+                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-50 mb-8">
+                  <EmotionRadarChart emotions={emotionReport.emotions} />
+                </div>
 
                 {interpretationResult && (
-                  <AnalysisSummary
-                    narrativeSummary={interpretationResult.narrativeSummary}
-                    topEmotions={interpretationResult.enrichedEmotions}
-                  />
+                  <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-50">
+                    <div className="flex items-center mb-4">
+                      <i className="ri-emotion-line text-blue-600 mr-2 text-lg"></i>
+                      <h4 className="font-bold text-gray-800">
+                        Emociones Principales
+                      </h4>
+                    </div>
+                    <div className="space-y-4">
+                      {interpretationResult.enrichedEmotions
+                        .slice(0, 3)
+                        .map((emotion) => {
+                          const emotionConstant = Object.values(
+                            EMOTION_DATA
+                          ).find((e) => e.name === emotion.name);
+
+                          return (
+                            <div key={emotion.name} className="group">
+                              <div className="flex items-center bg-gray-50 hover:bg-gray-100 rounded-lg p-3 transition-all duration-200">
+                                <i
+                                  className={`${emotionConstant?.icon || emotion.icon} mr-3 text-xl`}
+                                  style={{
+                                    color:
+                                      emotionConstant?.color ||
+                                      emotion.intensity.color,
+                                  }}
+                                ></i>
+
+                                <div className="flex-grow">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-sm text-gray-700 font-semibold">
+                                      {emotion.name}
+                                    </span>
+                                    <button
+                                      onClick={() =>
+                                        setSelectedEmotion(
+                                          selectedEmotion === emotion.name
+                                            ? null
+                                            : emotion.name
+                                        )
+                                      }
+                                      className="opacity-60 hover:opacity-100 transition-opacity"
+                                    >
+                                      <i className="ri-information-line text-xs text-blue-500 hover:text-blue-700"></i>
+                                    </button>
+                                  </div>
+
+                                  {selectedEmotion === emotion.name && (
+                                    <div className="mt-3 p-3 bg-blue-50 border-l-4 border-blue-300 rounded-r text-xs text-blue-900">
+                                      <div className="mb-2">
+                                        <strong>Interpretación:</strong>{' '}
+                                        {
+                                          emotion.intensity
+                                            .clinical_significance
+                                        }
+                                      </div>
+                                      <div>
+                                        <strong>Referencia:</strong>{' '}
+                                        {emotion.scientific_reference.author} (
+                                        {emotion.scientific_reference.year})
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+
+                                <div className="flex items-center gap-3">
+                                  <div
+                                    className="flex items-center text-xs font-bold px-2 py-1 rounded-full"
+                                    style={{
+                                      backgroundColor: `${emotionConstant?.color || emotion.intensity.color}20`,
+                                      color:
+                                        emotionConstant?.color ||
+                                        emotion.intensity.color,
+                                    }}
+                                  >
+                                    <i
+                                      className={`${emotion.intensity.icon} mr-1`}
+                                    ></i>
+                                    <span>{emotion.intensity.level}</span>
+                                  </div>
+                                  <span className="text-lg font-bold text-gray-800 min-w-[50px] text-right">
+                                    {emotion.percentage.toFixed(1)}%
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
