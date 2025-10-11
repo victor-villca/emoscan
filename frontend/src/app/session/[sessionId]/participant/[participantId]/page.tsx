@@ -14,6 +14,7 @@ import EmotionRadarChart from '@/components/session/EmotionRadarChart';
 import ParticipantReportSkeleton from '@/components/session/ParticipantReportSkeleton';
 import AnalysisSummary from '@/components/session/AnalysisSummary';
 import AnomaliesSection from '@/components/session/AnomaliesSection';
+import EmotionalArcVisualization from '@/components/session/EmotionalArcVisualization';
 import { usePDFGenerator } from '@/hooks/usePDFGenerator';
 import EmotionBreakdownCard from '@/components/session/EmotionBreakdownCard';
 import { EMOTION_DATA } from '@/lib/constant';
@@ -53,7 +54,9 @@ export default function ParticipantReport({
     if (!data?.emotionReport?.emotions) return null;
     return interpretEmotions(
       data.emotionReport.emotions,
-      data.participant.name
+      data.participant.name,
+      data.timeline,
+      data.transitions
     );
   }, [data]);
 
@@ -69,19 +72,28 @@ export default function ParticipantReport({
   });
 
   const sessionDurationInMinutes = useMemo(() => {
-    if (data?.session.actual_start_time && data?.session.actual_end_time) {
-      const start = new Date(data.session.actual_start_time);
-      const end = new Date(data.session.actual_end_time);
-      return differenceInMinutes(end, start);
+    if (!data?.session) return { minutes: 0, seconds: 0 };
+
+    const { actual_start_time, actual_end_time } = data.session;
+
+    if (actual_start_time && actual_end_time) {
+      const start = new Date(actual_start_time);
+      const end = new Date(actual_end_time);
+
+      const diffInMs = end.getTime() - start.getTime();
+      const diffInMinutes = Math.floor(diffInMs / 60000);
+      const diffInSeconds = Math.floor((diffInMs % 60000) / 1000);
+
+      return { minutes: diffInMinutes, seconds: diffInSeconds };
     }
-    return 0;
+
+    return { minutes: 0, seconds: 0 };
   }, [data]);
 
   const processedEmotions = useMemo(() => {
     if (!data?.emotionReport) return [];
 
     const allEmotionIds = Object.keys(EMOTION_DATA).map(Number);
-
     const metricsFromApi = data.emotionReport.emotions || [];
     const sessionDuration = differenceInMinutes(
       new Date(`${data.session.date}T${data.session.end_time}`),
@@ -90,11 +102,8 @@ export default function ParticipantReport({
 
     return allEmotionIds.map((id) => {
       const emotionInfo = EMOTION_DATA[id];
-
       const metric = metricsFromApi.find((m) => m.emotion_type_id === id);
-
       const percentage = parseFloat(metric?.average_percentage || '0.00');
-
       const minutes = Math.round((percentage / 100) * sessionDuration);
 
       return {
@@ -124,9 +133,13 @@ export default function ParticipantReport({
     );
 
   const { participant, session, emotionReport, transitions } = data;
-  const sessionDurationText =
-    sessionDurationInMinutes > 0 ? `${sessionDurationInMinutes} min` : 'N/A';
 
+  let sessionDurationText = 'N/A';
+  if (sessionDurationInMinutes.minutes >= 1) {
+    sessionDurationText = `${sessionDurationInMinutes.minutes} min`;
+  } else if (sessionDurationInMinutes.seconds > 0) {
+    sessionDurationText = `${sessionDurationInMinutes.seconds} s`;
+  }
   return (
     <>
       <div className="bg-white shadow-sm border-b border-gray-200">
@@ -158,7 +171,7 @@ export default function ParticipantReport({
               Informe de análisis de emociones
             </h1>
             <p className="text-gray-600 mt-1">
-              Sesion de {new Date(session.date).toLocaleDateString()}
+              Sesión de {new Date(session.date).toLocaleDateString()}
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-4 md:mt-0 w-full sm:w-auto">
@@ -260,6 +273,7 @@ export default function ParticipantReport({
                         scientificSummary={
                           interpretationResult.scientificSummary
                         }
+                        dynamicNarrative={interpretationResult.dynamicNarrative}
                         topEmotions={interpretationResult.enrichedEmotions}
                         anomalies={interpretationResult.anomalies}
                         bibliography={interpretationResult.bibliography}
@@ -395,6 +409,11 @@ export default function ParticipantReport({
           )}
         </div>
 
+        {interpretationResult && interpretationResult.dynamicArc && (
+          <div className="mb-8">
+            <EmotionalArcVisualization arc={interpretationResult.dynamicArc} />
+          </div>
+        )}
         {emotionReport && (
           <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
             <h3 className="text-xl font-semibold text-gray-900 mb-4">
@@ -459,59 +478,6 @@ export default function ParticipantReport({
                   percentage={emotion.percentage}
                 />
               ))}
-            </div>
-          </div>
-        )}
-
-        {transitions && transitions.length > 0 && (
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">
-              Key Emotion Transitions
-            </h3>
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-sm text-left">
-                <thead className="bg-gray-50 text-gray-500 uppercase">
-                  <tr>
-                    <th className="px-4 py-2">Tiempo</th>
-                    <th className="px-4 py-2">Transicion</th>
-                    <th className="px-4 py-2">
-                      Duración en el estado anterior
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {transitions.map((t) => {
-                    const from = EMOTION_DATA[t.emotion_from_id];
-                    const to = EMOTION_DATA[t.emotion_to_id];
-                    if (!from || !to) return null;
-                    return (
-                      <tr key={t.id}>
-                        <td className="px-4 py-3">
-                          {new Date(t.started_at).toLocaleTimeString()}
-                        </td>
-                        <td className="px-4 py-3 flex items-center gap-2">
-                          <span
-                            className="font-bold"
-                            style={{ color: from.color }}
-                          >
-                            {from.name}
-                          </span>
-                          <i className="ri-arrow-right-line text-gray-400"></i>
-                          <span
-                            className="font-bold"
-                            style={{ color: to.color }}
-                          >
-                            {to.name}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3">
-                          {t.duration_minutes} minutos
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
             </div>
           </div>
         )}
