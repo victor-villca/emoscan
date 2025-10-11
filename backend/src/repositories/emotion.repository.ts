@@ -180,3 +180,26 @@ export const getAggregatedEmotionMetrics = async (reportId: number) => {
     Array<{ emotion_type_id: number; average_percentage: string }>
   >;
 };
+export async function getEmotionTimelineForParticipant(
+  sessionId: number,
+  participantId: number
+) {
+  return db<EmotionTimeline>('emotion_timelines')
+    .where({
+      session_id: sessionId,
+      participant_id: participantId,
+    })
+    .orderBy('timestamp', 'asc');
+}
+
+export async function getEmotionTransitionsForParticipant(
+  sessionId: number,
+  participantId: number
+) {
+  return db<EmotionTransition>('emotion_transitions')
+    .where({
+      session_id: sessionId,
+      participant_id: participantId,
+    })
+    .orderBy('started_at', 'asc');
+}

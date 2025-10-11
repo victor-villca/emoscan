@@ -8,8 +8,10 @@ import {
   addEmotionMetric,
   recomputeSessionSummary,
   upsertEmotionSummary,
+  addTransitionEvent,
 } from '../repositories/emotion.repository';
 import * as SessionRepo from '../repositories/session.repository';
+import db from '../config/knex';
 
 dotenv.config();
 
@@ -84,12 +86,59 @@ export async function processIngestion(payload: IngestPayload) {
       const report = await getOrCreateEmotionReport(participant.id);
 
       const primaryEmotionId = mapEmotionToId(fastApiResult.primary_emotion);
+      const previousTimelineEvent = await db('emotion_timelines')
+        .where('participant_id', participant.id)
+        .orderBy('timestamp', 'desc')
+        .first();
       await addTimelineEvent({
         session_id: sessionId,
         participant_id: participant.id,
         timestamp: timestamp,
         primary_emotion_id: primaryEmotionId,
       });
+      try {
+        const previousTimelineEvent = await db('emotion_timelines')
+          .where('participant_id', participant.id)
+          .andWhere('timestamp', '<', new Date(timestamp))
+          .orderBy('timestamp', 'desc')
+          .first();
+
+        console.log('🔍 DEBUG - Previous event:', previousTimelineEvent);
+        console.log('🔍 DEBUG - Current emotion:', primaryEmotionId);
+        console.log(
+          '🔍 DEBUG - Should create transition?',
+          previousTimelineEvent &&
+            previousTimelineEvent.primary_emotion_id !== primaryEmotionId
+        );
+        if (
+          previousTimelineEvent &&
+          previousTimelineEvent.primary_emotion_id !== primaryEmotionId
+        ) {
+          const previousTimestamp = new Date(previousTimelineEvent.timestamp);
+          const currentTimestamp = new Date(timestamp);
+
+          const durationSeconds =
+            (currentTimestamp.getTime() - previousTimestamp.getTime()) / 1000;
+
+          await addTransitionEvent({
+            session_id: sessionId,
+            participant_id: participant.id,
+            emotion_from_id: previousTimelineEvent.primary_emotion_id,
+            emotion_to_id: primaryEmotionId,
+            started_at: currentTimestamp,
+            duration_seconds: Math.round(durationSeconds),
+          });
+
+          console.log(
+            `🔄 Transición registrada para ${participant.name}: ${previousTimelineEvent.primary_emotion_id} → ${primaryEmotionId} (${durationSeconds.toFixed(2)} seg)`
+          );
+        }
+      } catch (transitionError) {
+        console.error(
+          'Error al registrar la transición emocional:',
+          transitionError
+        );
+      }
 
       for (const [name, confidence] of Object.entries(
         fastApiResult.confidences

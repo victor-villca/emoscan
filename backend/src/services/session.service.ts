@@ -4,6 +4,10 @@ import * as EmotionRepo from '../repositories/emotion.repository';
 import { Session } from '../models/Session';
 import { differenceInMinutes } from 'date-fns';
 import { io } from '../config/socket';
+import {
+  getEmotionTimelineForParticipant,
+  getEmotionTransitionsForParticipant,
+} from '../repositories/emotion.repository';
 
 export const create = async (session: Omit<Session, 'id'>) =>
   SessionRepo.createSession(session);
@@ -91,8 +95,13 @@ export async function getParticipantReport(participantId: number) {
   const aggregatedMetrics = await EmotionRepo.getAggregatedEmotionMetrics(
     report.id
   );
-  const transitions = await EmotionRepo.getEmotionTransitions(
-    participant.session_id
+  const timeline = await getEmotionTimelineForParticipant(
+    participant.session_id,
+    participantId
+  );
+  const transitions = await getEmotionTransitionsForParticipant(
+    participant.session_id,
+    participantId
   );
 
   return {
@@ -102,6 +111,7 @@ export async function getParticipantReport(participantId: number) {
       ...report,
       emotions: aggregatedMetrics,
     },
+    timeline,
     transitions,
   };
 }
