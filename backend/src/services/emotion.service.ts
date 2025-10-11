@@ -116,7 +116,7 @@ export async function processIngestion(payload: IngestPayload) {
         ) {
           const previousTimestamp = new Date(previousTimelineEvent.timestamp);
           const currentTimestamp = new Date(timestamp);
-
+          
           const durationSeconds =
             (currentTimestamp.getTime() - previousTimestamp.getTime()) / 1000;
 
