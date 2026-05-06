@@ -86,10 +86,6 @@ export async function processIngestion(payload: IngestPayload) {
       const report = await getOrCreateEmotionReport(participant.id);
 
       const primaryEmotionId = mapEmotionToId(fastApiResult.primary_emotion);
-      const previousTimelineEvent = await db('emotion_timelines')
-        .where('participant_id', participant.id)
-        .orderBy('timestamp', 'desc')
-        .first();
       await addTimelineEvent({
         session_id: sessionId,
         participant_id: participant.id,
@@ -99,7 +95,7 @@ export async function processIngestion(payload: IngestPayload) {
       try {
         const previousTimelineEvent = await db('emotion_timelines')
           .where('participant_id', participant.id)
-          .andWhere('timestamp', '<', new Date(timestamp))
+          .andWhere('timestamp', '<', timestamp)
           .orderBy('timestamp', 'desc')
           .first();
 
@@ -125,7 +121,7 @@ export async function processIngestion(payload: IngestPayload) {
             participant_id: participant.id,
             emotion_from_id: previousTimelineEvent.primary_emotion_id,
             emotion_to_id: primaryEmotionId,
-            started_at: currentTimestamp,
+            started_at: previousTimestamp,
             duration_seconds: Math.round(durationSeconds),
           });
 
